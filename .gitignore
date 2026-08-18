@@ -1,0 +1,44 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments & Virtualenv
+.env
+.env.*
+!.env.example
+venv/
+.venv/
+env/
+ENV/
+
+# Node / Frontend / Build
+node_modules/
+dist/
+build/
+.next/
+out/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+*.tfvars
+!*.tfvars.example
+
+# GCP / Cloud SDK / Credentials
+*credentials*.json
+*service-account*.json
+.gcp/
+key.json
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
