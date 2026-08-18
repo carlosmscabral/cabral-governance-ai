@@ -3,11 +3,13 @@
 [![GCP Architecture](https://img.shields.io/badge/Google%20Cloud-Agent%20Platform-blue.svg)](https://cloud.google.com)
 [![Model](https://img.shields.io/badge/Model-Gemini%20Flash%20Latest-green.svg)](https://cloud.google.com/vertex-ai)
 [![Visual Docs](https://img.shields.io/badge/Visual%20Docs-Interactive%20Guide-purple.svg)](./VISUAL_GUIDE.md)
+[![Live Demo Guide](https://img.shields.io/badge/Live%20Demo-Presenter%20Playbook-orange.svg)](./DEMO_GUIDE.md)
 [![Zero Residuals](https://img.shields.io/badge/Cleanup-Zero%20Residuals-success.svg)](#desprovisionamento-undeploy)
 
 Este laboratório implementa uma arquitetura corporativa completa de **Governança de Ingress** para agentes autônomos no Google Cloud. A solução intercepta o tráfego de entrada e saída de um agente Vertex AI Reasoning Engine utilizando o **Agent Gateway (`CLIENT_TO_AGENT`)**, aplicando guardrails ativos de segurança contra injeção de prompt e redação de dados sensíveis (PII / SSN) com **Model Armor** e **Cloud Sensitive Data Protection (DLP)** via **Service Extensions**.
 
-📖 **Consulte o [Guia Visual e Didático de Arquitetura (VISUAL_GUIDE.md)](./VISUAL_GUIDE.md)** para diagramas progressivos (C4), sequências detalhadas passo a passo (sequence walks), wire format de requisições/SSE e código fonte anotado.
+- 📖 **[Guia Visual de Arquitetura (VISUAL_GUIDE.md)](./VISUAL_GUIDE.md)**: Diagramas progressivos (C4), sequence walks, wire formats de rede e código anotado.
+- 🎙️ **[Roteiro de Apresentação ao Vivo (DEMO_GUIDE.md)](./DEMO_GUIDE.md)**: Script passo a passo em 4 atos, comandos cURL, navegação no console GCP e FAQ de clientes.
 
 O agente foi desenvolvido utilizando o **Google Agent Development Kit (ADK)** em **Português do Brasil (PT-BR)**, utilizando o modelo `gemini-flash-latest` para interagir com repositórios de dados no Cloud Storage.
 
