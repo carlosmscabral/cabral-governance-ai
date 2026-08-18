@@ -105,7 +105,7 @@ Valide os guardrails de segurança executando os testes em Português do Brasil:
 ```
 
 > [!NOTE]
-> **Importante para Demonstrações**: Para acionar a governança do Model Armor e do Agent Gateway, os testes devem ser realizados via API externa (`./test.sh` ou `curl`). A aba de teste interativa do Console da Vertex AI conecta-se ao canal privado de depuração administrativa (`vais-query-reasoning-engine`), contornando o Gateway de borda. Consulte o [Guia Visual de Arquitetura](./VISUAL_GUIDE.md#fluxo-4-comparativo-arquitetural--tráfego-de-produção-vs-playground-do-console) para mais detalhes.
+> **Importante para Demonstrações**: Para acionar a governança do Model Armor e do Agent Gateway, os testes devem ser realizados via API externa (`./test.sh` ou `curl`). O **Playground** interativo do Console da Vertex AI conecta-se ao canal privado de depuração administrativa (`vais-query-reasoning-engine`), contornando o Gateway de borda. Consulte o [Guia Visual de Arquitetura](./VISUAL_GUIDE.md#fluxo-4-comparativo-arquitetural--tráfego-de-produção-vs-playground-do-console) para mais detalhes.
 
 ### Passo 4: Desprovisionamento (Zero Residuals)
 Para remover todos os recursos provisionados sem deixar custos residuais ou permissões órfãs:

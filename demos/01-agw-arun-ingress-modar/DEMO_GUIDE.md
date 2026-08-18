@@ -48,9 +48,9 @@ source env.sh
 ```
 
 > [!WARNING]
-> **⚠️ IMPORTANTE: NÃO UTILIZE A ABA "TEST" / PLAYGROUND DO CONSOLE GCP PARA A DEMO AO VIVO!**
+> **⚠️ IMPORTANTE: NÃO UTILIZE O PLAYGROUND DO CONSOLE GCP PARA A DEMO AO VIVO!**
 > 
-> - **Causa Técnica**: O painel interativo de testes do **Vertex AI Studio Console** comunica-se diretamente com o canal de depuração administrativa interna do contêiner (`/api/stream_reasoning_engine` com identidade interna `user.id: "vais-query-reasoning-engine"`), **bypasseando totalmente o Agent Gateway e as políticas de rede**.
+> - **Causa Técnica**: O **Playground** interativo do **Vertex AI Console** comunica-se diretamente com o canal de depuração administrativa interna do contêiner (`/api/stream_reasoning_engine` com identidade interna `user.id: "vais-query-reasoning-engine"`), **bypasseando totalmente o Agent Gateway e as políticas de rede**.
 > - **Como demonstrar**: Para que as políticas de segurança do **Model Armor** e do **Cloud DLP** sejam executadas e interceptem o tráfego, todas as interações devem ser enviadas via **API externa / Agent Gateway Endpoint** (usando o script `./test.sh`, comandos `curl` ou uma aplicação cliente conectada via SDK).
 
 ### Terminal 2: Streaming de Logs de Segurança em Tempo Real

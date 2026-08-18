@@ -269,7 +269,7 @@ sequenceDiagram
 #### Comparativo em ASCII (Terminal Fallback)
 
 ```
-[ CONSOLE GCP (Aba Test) ] ─────────────────────────► [ RE CONTAINER ] (Bypass de Rede - Não Governa)
+[ CONSOLE GCP (Playground) ] ───────────────────────► [ RE CONTAINER ] (Bypass de Rede - Não Governa)
                                                            ▲
                                                            │
 [ APP CLIENTE / API ] ──► [ AGENT GATEWAY (PEP) ] ─────────┘ (Tráfego de Produção - 100% Governado)
