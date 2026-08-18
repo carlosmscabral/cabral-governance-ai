@@ -39,14 +39,13 @@ fi
 
 # Regional & Model Settings
 export REGION="${REGION:-us-central1}"
-export LOCATION="${REGION}"
 export MODEL_NAME="${MODEL_NAME:-gemini-flash-latest}"
 export MODEL_LOCATION="${MODEL_LOCATION:-global}"
 export GOOGLE_CLOUD_LOCATION="${GOOGLE_CLOUD_LOCATION:-global}"
 export VERTEX_AI_LOCATION="${VERTEX_AI_LOCATION:-global}"
 export AGENT_LOCATION="${AGENT_LOCATION:-global}"
 
-# Resource Naming Slugs
+# Resource Naming Slugs (PREFIX is used to namespace all provisioned resources)
 export PREFIX="${PREFIX:-agw-modar}"
 export AGW_NAME="${AGW_NAME:-${PREFIX}-ingress}"
 export AGW_URI="projects/${PROJECT_ID}/locations/${REGION}/agentGateways/${AGW_NAME}"
@@ -67,8 +66,7 @@ export MODAR_RESP_TEMPLATE_ID="${MODAR_RESP_TEMPLATE_ID:-${PREFIX}-resp-template
 export AUTHZ_EXT_NAME="${AUTHZ_EXT_NAME:-${PREFIX}-svc-ext-authz}"
 export AUTHZ_POLICY_NAME="${AUTHZ_POLICY_NAME:-${PREFIX}-authz-policy}"
 
-# Agent Names
-export RE_AGENT_NAME="${RE_AGENT_NAME:-agent_crm}"
+# Vertex AI Reasoning Engine Display Name
 export RE_DISPLAY_NAME="${RE_DISPLAY_NAME:-${PREFIX}-agent-crm}"
 
 # State Directory for Idempotent Tracking
