@@ -47,6 +47,12 @@ cd demos/01-agw-arun-ingress-modar
 source env.sh
 ```
 
+> [!WARNING]
+> **⚠️ IMPORTANTE: NÃO UTILIZE A ABA "TEST" / PLAYGROUND DO CONSOLE GCP PARA A DEMO AO VIVO!**
+> 
+> - **Causa Técnica**: O painel interativo de testes do **Vertex AI Studio Console** comunica-se diretamente com o canal de depuração administrativa interna do contêiner (`/api/stream_reasoning_engine` com identidade interna `user.id: "vais-query-reasoning-engine"`), **bypasseando totalmente o Agent Gateway e as políticas de rede**.
+> - **Como demonstrar**: Para que as políticas de segurança do **Model Armor** e do **Cloud DLP** sejam executadas e interceptem o tráfego, todas as interações devem ser enviadas via **API externa / Agent Gateway Endpoint** (usando o script `./test.sh`, comandos `curl` ou uma aplicação cliente conectada via SDK).
+
 ### Terminal 2: Streaming de Logs de Segurança em Tempo Real
 Deixe este comando rodando em uma janela lateral ou monitor secundário para mostrar os vereditos do Model Armor ao vivo:
 ```bash
@@ -227,6 +233,9 @@ Para impressionar na demonstração navegando pela interface gráfica do Google 
 
 ### P4: *"Como funciona a identidade do agente para acessar recursos internos?"*
 > **Resposta**: *"O agente utiliza Workload Identity Federation com credencial SPIFFE (`principalSet://...`), seguindo o princípio de privilégio mínimo. O agente possui apenas permissão de leitura (`roles/storage.objectViewer`) estritamente no bucket necessário."*
+
+### P5: *"Por que ao testar pelo Playground do Vertex AI Console o Model Armor não barrou a consulta?"*
+> **Resposta**: *"O Playground do Console do Google Cloud é uma interface administrativa de depuração interna que conversa diretamente com a API privada do contêiner (`vais-query-reasoning-engine`), contornando a borda de rede. Em arquiteturas reais de produção corporativa, os clientes e frontends conectam-se obrigatoriamente através do endpoint do Agent Gateway, onde a política de rede `CONTENT_AUTHZ` e o Model Armor são impostos compulsoriamente."*
 
 ---
 

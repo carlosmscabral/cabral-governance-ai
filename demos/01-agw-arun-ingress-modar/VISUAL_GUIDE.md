@@ -233,6 +233,53 @@ sequenceDiagram
 
 ---
 
+### Fluxo 4: Comparativo Arquitetural — Tráfego de Produção vs Playground do Console
+
+> **Lição Crítica de Arquitetura:** Por que a demo DEVE ser executada via API externa e por que o console da Vertex AI não dispara o Model Armor.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Dev as Desenvolvedor (Console Web GCP)
+    actor App as App Cliente / API Externa
+    participant AGW as Agent Gateway (Ingress PEP)
+    participant MA as Model Armor (us-central1)
+    participant RE as Reasoning Engine (Container)
+
+    rect rgb(255, 240, 240)
+    Note over Dev,RE: CANAL DE TESTE INTERNO (Playground do Console GCP)
+    Dev->>RE: POST /api/stream_reasoning_engine (user.id: vais-query-reasoning-engine)
+    Note over Dev,RE: BYPASS DO GATEWAY: Chamada direta ao container administrativo
+    RE-->>Dev: Resposta bruta (Sem filtros de Ingress / Sem Model Armor)
+    end
+
+    rect rgb(240, 255, 240)
+    Note over App,RE: CANAL OFICIAL DE PRODUÇÃO (Governança Obrigatória)
+    App->>AGW: POST :streamQuery (Chamada HTTPS externa de aplicação)
+    AGW->>MA: SanitizeUserPrompt (CONTENT_AUTHZ Extension)
+    MA-->>AGW: Veredito (ALLOW / BLOCK)
+    AGW->>RE: Encaminha requisição autorizada
+    RE-->>AGW: Retorna resposta do modelo
+    AGW->>MA: SanitizeModelResponse (Cloud DLP Redaction)
+    MA-->>AGW: Resposta higienizada / Interceptada
+    AGW-->>App: Entrega resposta segura ao usuário final
+    end
+```
+
+#### Comparativo em ASCII (Terminal Fallback)
+
+```
+[ CONSOLE GCP (Aba Test) ] ─────────────────────────► [ RE CONTAINER ] (Bypass de Rede - Não Governa)
+                                                           ▲
+                                                           │
+[ APP CLIENTE / API ] ──► [ AGENT GATEWAY (PEP) ] ─────────┘ (Tráfego de Produção - 100% Governado)
+                                 │
+                                 ▼
+                         [ MODEL ARMOR ] (Sanitize Prompt & Response)
+```
+
+---
+
 ## 🔬 4. Inspeção de Protocolo e Formato de Dados (Packet & Wire Walk)
 
 ### Formato de Requisição HTTP REST (`POST :streamQuery`)
