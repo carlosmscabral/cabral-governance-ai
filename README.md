@@ -71,12 +71,13 @@ Before deploying any demo:
 
 | Demo | Focus Area | Status | Description |
 | :--- | :--- | :--- | :--- |
-| *Coming Soon* | *Access Control & IAM* | 📋 Planned | Fine-grained tool authorization and principle of least privilege for agents. |
-| *Coming Soon* | *Guardrails & Content Safety* | 📋 Planned | Model armor, prompt injection mitigation, and sensitive data redaction. |
-| *Coming Soon* | *Auditability & Observability* | 📋 Planned | Cloud Trace, BigQuery audit trails, and agent behavior monitoring. |
+| [`01-agw-arun-ingress-modar`](demos/01-agw-arun-ingress-modar) | *Ingress Governance & Guardrails* | 🟢 Ready | Agent Gateway Ingress (`CLIENT_TO_AGENT`) com Vertex AI Reasoning Engine, Model Armor e Cloud DLP para mitigação de prompt injection e redação de PII/SSN. |
+| *02-agw-arun-egress-sgp* | *Egress Governance & Semantic Policies* | 📋 Planned | Agent Gateway Egress (`AGENT_TO_ANYWHERE`) com Semantic Governance Policies (SGP), Agent Registry e controle granular de chamadas MCP. |
+| *03-agent-observability-trace* | *Observability & Auditability* | 📋 Planned | Cloud Trace, BigQuery Agent Analytics, telemetria OpenTelemetry e auditoria de decisões de sanitização. |
+
 
 ---
 
 ## 📄 License
 
-This repository is licensed under the [Apache 2.0 License](file:///Users/carloscabral/_demos/cabral-governance-ai/LICENSE).
+This repository is licensed under the [Apache 2.0 License](./LICENSE).

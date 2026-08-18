@@ -1,0 +1,5 @@
+name: ${AGW_NAME}
+protocols:
+  - MCP
+googleManaged:
+  governedAccessPath: CLIENT_TO_AGENT

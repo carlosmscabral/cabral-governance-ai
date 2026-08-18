@@ -1,0 +1,10 @@
+name: ${AUTHZ_POLICY_NAME}
+target:
+  resources:
+    - "projects/${PROJECT_ID}/locations/${REGION}/agentGateways/${AGW_NAME}"
+policyProfile: CONTENT_AUTHZ
+action: CUSTOM
+customProvider:
+  authzExtension:
+    resources:
+      - "projects/${PROJECT_ID}/locations/${REGION}/authzExtensions/${AUTHZ_EXT_NAME}"

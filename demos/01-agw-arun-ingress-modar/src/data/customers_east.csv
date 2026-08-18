@@ -1,0 +1,4 @@
+id,first_name,last_name,email,ssn
+1,John,Smith,john.smith@example.com,123-45-6789
+2,Jane,Doe,jane.doe@example.com,987-65-4321
+3,Robert,Johnson,robert.j@example.com,456-78-1234

@@ -40,5 +40,10 @@ key.json
 *.swo
 .DS_Store
 
+# Demo Runtime State and Temp files
+.state/
+*.tmp
+
 # Logs
 *.log
+

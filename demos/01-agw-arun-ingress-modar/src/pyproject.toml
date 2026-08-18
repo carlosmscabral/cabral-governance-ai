@@ -1,0 +1,14 @@
+[project]
+name = "agent-crm"
+version = "0.1.0"
+description = "Agente CRM com governança via Agent Gateway e Model Armor"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "google-cloud-aiplatform[adk,agent_engines]>=1.80.0",
+    "google-cloud-storage>=2.14.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

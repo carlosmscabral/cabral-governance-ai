@@ -1,0 +1,6 @@
+name: ${AUTHZ_EXT_NAME}
+service: modelarmor.${REGION}.rep.googleapis.com
+failOpen: true
+timeout: 1s
+metadata:
+  model_armor_settings: '[ { "response_template_id": "projects/${PROJECT_ID}/locations/${REGION}/templates/${MODAR_RESP_TEMPLATE_ID}", "request_template_id": "projects/${PROJECT_ID}/locations/${REGION}/templates/${MODAR_REQ_TEMPLATE_ID}" } ]'
