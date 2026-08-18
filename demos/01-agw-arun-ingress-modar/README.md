@@ -118,7 +118,6 @@ Para remover todos os recursos provisionados sem deixar custos residuais ou perm
 demos/01-agw-arun-ingress-modar/
 ├── README.md                          # Este guia completo
 ├── env.sh                             # Autodescoberta de projeto e variáveis centrais
-├── env.sh.example                     # Template de referência
 ├── deploy.sh                          # Orquestrador mestre de deploy
 ├── test.sh                            # Suíte de testes automatizada em PT-BR
 ├── undeploy.sh                        # Script de limpeza completa (Zero Residuals)
