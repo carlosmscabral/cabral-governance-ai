@@ -132,8 +132,9 @@ fi
 
 log_info "Identidade SPIFFE do Agente: ${COLOR_CYAN}${AGENT_IDENTITY}${COLOR_NC}"
 
-# Grant storage.objectViewer on data bucket
-log_info "Concedendo roles/storage.objectViewer no bucket 'gs://${DATA_BUCKET}'..."
+# Grant storage.objectViewer on data bucket for Container ADC Service Accounts
+# Note: Cloud Storage API uses Service Account OAuth2 credentials from the container runtime
+log_info "Concedendo roles/storage.objectViewer no bucket 'gs://${DATA_BUCKET}' para a SA de runtime..."
 gcloud storage buckets add-iam-policy-binding "gs://${DATA_BUCKET}" \
     --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
     --role="roles/storage.objectViewer" --quiet &>/dev/null || true
@@ -141,8 +142,8 @@ gcloud storage buckets add-iam-policy-binding "gs://${DATA_BUCKET}" \
     --member="serviceAccount:service-${PROJECT_NUMBER}@gcp-sa-aiplatform.iam.gserviceaccount.com" \
     --role="roles/storage.objectViewer" --quiet &>/dev/null || true
 
-# Grant Telemetry, Logging and Vertex AI User roles
-log_info "Concedendo papéis de telemetria e observabilidade ao agente..."
+# Grant Telemetry, Logging and Vertex AI User roles to SPIFFE Agent Identity
+log_info "Concedendo papéis de telemetria e observabilidade à Identidade SPIFFE do agente..."
 for role in "roles/aiplatform.user" "roles/cloudtrace.agent" "roles/telemetry.writer" "roles/logging.logWriter"; do
     gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
         --member="${AGENT_IDENTITY}" \
@@ -150,15 +151,6 @@ for role in "roles/aiplatform.user" "roles/cloudtrace.agent" "roles/telemetry.wr
         --condition=None \
         --quiet &>/dev/null || true
 done
-
-# Grant MCP Tool User role to Project PrincipalSet
-PRINCIPAL_SET="principalSet://agents.aiplatform.googleapis.com/projects/${PROJECT_NUMBER}/locations/${REGION}/platformContainer/*"
-log_info "Concedendo roles/mcp.toolUser ao PrincipalSet dos Reasoning Engines..."
-gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
-    --member="${PRINCIPAL_SET}" \
-    --role="roles/mcp.toolUser" \
-    --condition=None \
-    --quiet &>/dev/null || true
 
 log_success "Políticas IAM de identidade e acesso vinculadas com sucesso!"
 

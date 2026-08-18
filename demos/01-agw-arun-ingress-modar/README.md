@@ -167,12 +167,10 @@ demos/01-agw-arun-ingress-modar/
 
 ## 🔒 6. Matriz de Identidade e Privilégio Mínimo (IAM)
 
-| Identidade / Principal | Papel Concedido | Finalidade |
-|---|---|---|
 | **Model Armor SA** (`service-${PROJ_NO}@gcp-sa-modelarmor...`) | `roles/dlp.user` | Invocar templates de inspeção e redação do Cloud DLP. |
 | **Service Extensions SA** (`service-${PROJ_NO}@gcp-sa-dep...`) | `roles/modelarmor.calloutUser`<br>`roles/serviceusage.serviceUsageConsumer`<br>`roles/modelarmor.user` | Permitir que o proxy do Gateway execute chamadas para o Model Armor Regional. |
-| **Identidade SPIFFE do Agente** (`principal://agents.aiplatform...`) | `roles/storage.objectViewer`<br>`roles/aiplatform.user`<br>`roles/telemetry.writer`<br>`roles/logging.logWriter` | Acesso estrito de leitura ao bucket de CRM e emissão de telemetria sem chave estática. |
-| **Reasoning Engine PrincipalSet** (`principalSet://agents.aiplatform...`) | `roles/mcp.toolUser` | Autorização de ferramentas e extensões para a frota de agentes do projeto. |
+| **Identidade SPIFFE do Agente** (`principal://agents.aiplatform...`) | `roles/aiplatform.user`<br>`roles/cloudtrace.agent`<br>`roles/telemetry.writer`<br>`roles/logging.logWriter` | Emissão de telemetria, logs de auditoria e chamadas internas sem chave estática. |
+| **Runtime Service Account** (`${PROJ_NO}-compute@developer...`) | `roles/storage.objectViewer` no Bucket de Dados | Acesso estrito de leitura via ADC aos arquivos CSV de CRM no Cloud Storage. |
 
 ---
 

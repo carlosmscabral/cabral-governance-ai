@@ -69,33 +69,8 @@ log_info "Endpoint regional: https://modelarmor.${REGION}.rep.googleapis.com/"
 gcloud config set api_endpoint_overrides/modelarmor "https://modelarmor.${REGION}.rep.googleapis.com/" 2>/dev/null || true
 log_success "Override do endpoint regional do Model Armor configurado."
 
-# 5. Register Core Google APIs in Agent Registry
-log_step "4. Registrando Core Google APIs no Agent Registry (Defesa contra Default-Deny)..."
-if gcloud agent-registry services describe "core-gapi-services" --location="${REGION}" --project="${PROJECT_ID}" &>/dev/null; then
-    log_info "Serviço 'core-gapi-services' já está registrado no Agent Registry."
-else
-    log_info "Criando registro de serviço 'core-gapi-services' no Agent Registry..."
-    gcloud agent-registry services create "core-gapi-services" \
-        --location="${REGION}" \
-        --project="${PROJECT_ID}" \
-        --display-name="gapi.core.services" \
-        --description="Core APIs e serviços Google para tráfego do Agent Runtime" \
-        --endpoint-spec-type=no-spec \
-        --interfaces="protocolBinding=JSONRPC,url=https://telemetry.googleapis.com" \
-        --interfaces="protocolBinding=JSONRPC,url=https://telemetry.mtls.googleapis.com" \
-        --interfaces="protocolBinding=JSONRPC,url=https://${REGION}-aiplatform.googleapis.com" \
-        --interfaces="protocolBinding=JSONRPC,url=https://${REGION}-aiplatform.mtls.googleapis.com" \
-        --interfaces="protocolBinding=JSONRPC,url=https://cloudresourcemanager.googleapis.com" \
-        --interfaces="protocolBinding=JSONRPC,url=https://iamcredentials.googleapis.com" \
-        --interfaces="protocolBinding=JSONRPC,url=https://iamcredentials.mtls.googleapis.com" \
-        --interfaces="protocolBinding=JSONRPC,url=https://agentregistry.googleapis.com" 2>/dev/null || {
-            log_warn "Registro no Agent Registry via CLI não disponível ou em alpha. Prosseguindo..."
-        }
-    log_success "Configuração do Agent Registry concluída."
-fi
-
-# 6. Service Agent IAM Bindings (Model Armor & Service Extensions)
-log_step "5. Vinculando papéis IAM aos Service Agents gerenciados do Google Cloud..."
+# 5. Service Agent IAM Bindings (Model Armor & Service Extensions)
+log_step "4. Vinculando papéis IAM aos Service Agents gerenciados do Google Cloud..."
 
 # Model Armor SA
 MODEL_ARMOR_SA="service-${PROJECT_NUMBER}@gcp-sa-modelarmor.iam.gserviceaccount.com"

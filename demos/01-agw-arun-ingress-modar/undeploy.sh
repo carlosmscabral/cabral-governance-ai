@@ -46,14 +46,6 @@ else
     log_info "Nenhum Reasoning Engine ativo encontrado para remoção."
 fi
 
-# Remove PrincipalSet IAM
-PRINCIPAL_SET="principalSet://agents.aiplatform.googleapis.com/projects/${PROJECT_NUMBER}/locations/${REGION}/platformContainer/*"
-gcloud projects remove-iam-policy-binding "${PROJECT_ID}" \
-    --member="${PRINCIPAL_SET}" \
-    --role="roles/mcp.toolUser" \
-    --condition=None \
-    --quiet &>/dev/null || true
-
 # ------------------------------------------------------------------------------
 # 2. Delete Cloud Storage Buckets
 # ------------------------------------------------------------------------------
