@@ -16,19 +16,40 @@ Este guia foi elaborado para arquitetos de soluções, engenheiros de vendas e l
 
 ## 🖥️ 2. Checklist de Preparação Pré-Demo (Setup em 2 Minutos)
 
-Antes de iniciar a apresentação com o cliente, configure seu ambiente:
+### Passo 0: Configurar e Validar o Ambiente (`env.sh`)
 
-### Terminal 1: Envio de Comandos e Consultas
-Posicione-se no diretório da demo:
+O arquivo [`env.sh`](./env.sh) centraliza todas as configurações do laboratório (IDs de projetos, regiões, modelos, buckets e políticas). 
+
+> [!IMPORTANT]
+> **Antes de iniciar a apresentação**, certifique-se de que o seu ambiente está apontando para o projeto GCP correto:
+> 
+> 1. **Auto-Detecção do Projeto**: Por padrão, o `env.sh` lê o projeto ativo do seu CLI (`gcloud config get-value project`).
+> 2. **Definição Explícita (Opcional)**: Se quiser rodar em um projeto específico, execute:
+>    ```bash
+>    export PROJECT_ID="seu-projeto-gcp"
+>    ```
+> 3. **Carregar as Variáveis de Ambiente**:
+>    ```bash
+>    cd demos/01-agw-arun-ingress-modar
+>    source env.sh
+>    ```
+> 4. **Primeira Execução (Deploy da Infraestrutura)**: Se o ambiente ainda não estiver provisionado no projeto alvo, execute o instalador completo:
+>    ```bash
+>    ./deploy.sh
+>    ```
+
+---
+
+### Terminal 1: Envio de Comandos e Consultas (Apresentador)
+Posicione-se no diretório da demo e carregue o ambiente:
 ```bash
 cd demos/01-agw-arun-ingress-modar
 source env.sh
 ```
 
 ### Terminal 2: Streaming de Logs de Segurança em Tempo Real
-Deixe este comando rodando em uma janela lateral ou monitor secundário:
+Deixe este comando rodando em uma janela lateral ou monitor secundário para mostrar os vereditos do Model Armor ao vivo:
 ```bash
-# Monitora em tempo real os vereditos do Model Armor (ALLOW, BLOCK, SANITIZE)
 PROJECT_ID=$(gcloud config get-value project)
 gcloud logging read "logName=\"projects/${PROJECT_ID}/logs/modelarmor.googleapis.com%2Fsanitize_operations\"" \
     --project="${PROJECT_ID}" \
