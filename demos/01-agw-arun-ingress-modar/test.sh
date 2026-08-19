@@ -52,7 +52,7 @@ send_query() {
 {
   "input": {
     "message": "${prompt}",
-    "user_id": "test-user"
+    "user_id": "test-user-$(date +%s)-$RANDOM"
   }
 }
 EOF
@@ -108,6 +108,7 @@ else
     ((TESTS_FAILED++))
 fi
 
+sleep 2
 printf "\n"
 
 # ==============================================================================
@@ -139,6 +140,7 @@ else
     ((TESTS_PASSED++))
 fi
 
+sleep 2
 printf "\n"
 
 # ==============================================================================
