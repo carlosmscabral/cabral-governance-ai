@@ -123,18 +123,28 @@ RE_METADATA=$(curl -s -f -H "Authorization: Bearer ${TOKEN}" \
     -H "x-goog-user-project: ${PROJECT_ID}" \
     "https://${REGION}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${REGION}/reasoningEngines/${RE_ENGINE_ID}")
 
-# Identity format: principal://agents.aiplatform.googleapis.com/projects/...
-AGENT_IDENTITY=$(echo "$RE_METADATA" | jq -r '.identity // .runtimeIdentity // empty')
+# Resolve Organization Ancestor for canonical SPIFFE Trust Domain
+ORG_ID=$(gcloud projects get-ancestors "${PROJECT_ID}" --filter="type:organization" --format="value(id)" 2>/dev/null || true)
 
-if [[ -z "$AGENT_IDENTITY" ]]; then
-    AGENT_IDENTITY="principal://agents.aiplatform.googleapis.com/projects/${PROJECT_NUMBER}/locations/${REGION}/reasoningEngines/${RE_ENGINE_ID}"
+if [[ -n "$ORG_ID" ]]; then
+    AGENT_SPIFFE="principal://agents.global.org-${ORG_ID}.system.id.goog/resources/aiplatform/projects/${PROJECT_NUMBER}/locations/${REGION}/reasoningEngines/${RE_ENGINE_ID}"
+    AGENT_PRINCIPAL_SET="principalSet://agents.global.org-${ORG_ID}.system.id.goog/attribute.platformContainer/aiplatform/projects/${PROJECT_NUMBER}"
+else
+    AGENT_SPIFFE="principal://agents.global.project-${PROJECT_NUMBER}.system.id.goog/resources/aiplatform/projects/${PROJECT_NUMBER}/locations/${REGION}/reasoningEngines/${RE_ENGINE_ID}"
+    AGENT_PRINCIPAL_SET="principalSet://agents.global.project-${PROJECT_NUMBER}.system.id.goog/attribute.platformContainer/aiplatform/projects/${PROJECT_NUMBER}"
 fi
 
-log_info "Identidade SPIFFE do Agente: ${COLOR_CYAN}${AGENT_IDENTITY}${COLOR_NC}"
+log_info "Identidade SPIFFE do Agente: ${COLOR_CYAN}${AGENT_SPIFFE}${COLOR_NC}"
+log_info "PrincipalSet da Frota: ${COLOR_CYAN}${AGENT_PRINCIPAL_SET}${COLOR_NC}"
 
-# Grant storage.objectViewer on data bucket for Container ADC Service Accounts
-# Note: Cloud Storage API uses Service Account OAuth2 credentials from the container runtime
-log_info "Concedendo roles/storage.objectViewer no bucket 'gs://${DATA_BUCKET}' para a SA de runtime..."
+# Grant storage.objectViewer directly to SPIFFE Agent Identity on the Data Bucket
+log_info "Concedendo roles/storage.objectViewer no bucket 'gs://${DATA_BUCKET}' para a Identidade SPIFFE e SA de runtime..."
+gcloud storage buckets add-iam-policy-binding "gs://${DATA_BUCKET}" \
+    --member="${AGENT_SPIFFE}" \
+    --role="roles/storage.objectViewer" --quiet &>/dev/null || true
+gcloud storage buckets add-iam-policy-binding "gs://${DATA_BUCKET}" \
+    --member="${AGENT_PRINCIPAL_SET}" \
+    --role="roles/storage.objectViewer" --quiet &>/dev/null || true
 gcloud storage buckets add-iam-policy-binding "gs://${DATA_BUCKET}" \
     --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
     --role="roles/storage.objectViewer" --quiet &>/dev/null || true
@@ -146,7 +156,7 @@ gcloud storage buckets add-iam-policy-binding "gs://${DATA_BUCKET}" \
 log_info "Concedendo papéis de telemetria e observabilidade à Identidade SPIFFE do agente..."
 for role in "roles/aiplatform.user" "roles/cloudtrace.agent" "roles/telemetry.writer" "roles/logging.logWriter"; do
     gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
-        --member="${AGENT_IDENTITY}" \
+        --member="${AGENT_SPIFFE}" \
         --role="${role}" \
         --condition=None \
         --quiet &>/dev/null || true

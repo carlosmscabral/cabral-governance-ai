@@ -169,8 +169,8 @@ demos/01-agw-arun-ingress-modar/
 
 | **Model Armor SA** (`service-${PROJ_NO}@gcp-sa-modelarmor...`) | `roles/dlp.user` | Invocar templates de inspeção e redação do Cloud DLP. |
 | **Service Extensions SA** (`service-${PROJ_NO}@gcp-sa-dep...`) | `roles/modelarmor.calloutUser`<br>`roles/serviceusage.serviceUsageConsumer`<br>`roles/modelarmor.user` | Permitir que o proxy do Gateway execute chamadas para o Model Armor Regional. |
-| **Identidade SPIFFE do Agente** (`principal://agents.aiplatform...`) | `roles/aiplatform.user`<br>`roles/cloudtrace.agent`<br>`roles/telemetry.writer`<br>`roles/logging.logWriter` | Emissão de telemetria, logs de auditoria e chamadas internas sem chave estática. |
-| **Runtime Service Account** (`${PROJ_NO}-compute@developer...`) | `roles/storage.objectViewer` no Bucket de Dados | Acesso estrito de leitura via ADC aos arquivos CSV de CRM no Cloud Storage. |
+| **Identidade SPIFFE do Agente** (`principal://agents.global.org-...` / `principalSet://...`) | `roles/storage.objectViewer` no Bucket de Dados<br>`roles/aiplatform.user`<br>`roles/cloudtrace.agent`<br>`roles/telemetry.writer`<br>`roles/logging.logWriter` | Leitura de datasets no Cloud Storage via mTLS SPIFFE nativo, telemetria e auditoria sem chaves estáticas. |
+| **Runtime Service Account** (`${PROJ_NO}-compute@developer...`) | `roles/storage.objectViewer` no Bucket de Dados | Acesso estrito de leitura fallback via ADC aos arquivos CSV de CRM no Cloud Storage. |
 
 ---
 

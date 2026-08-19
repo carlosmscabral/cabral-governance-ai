@@ -41,6 +41,21 @@ if [[ -n "${RE_ENGINE_ID}" ]]; then
     curl -s -X DELETE -H "Authorization: Bearer ${TOKEN}" \
         -H "x-goog-user-project: ${PROJECT_ID}" \
         "https://${REGION}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${REGION}/reasoningEngines/${RE_ENGINE_ID}?force=true" >/dev/null || true
+
+    # Clean up project-level SPIFFE IAM bindings
+    ORG_ID=$(gcloud projects get-ancestors "${PROJECT_ID}" --filter="type:organization" --format="value(id)" 2>/dev/null || true)
+    if [[ -n "$ORG_ID" ]]; then
+        AGENT_SPIFFE="principal://agents.global.org-${ORG_ID}.system.id.goog/resources/aiplatform/projects/${PROJECT_NUMBER}/locations/${REGION}/reasoningEngines/${RE_ENGINE_ID}"
+    else
+        AGENT_SPIFFE="principal://agents.global.project-${PROJECT_NUMBER}.system.id.goog/resources/aiplatform/projects/${PROJECT_NUMBER}/locations/${REGION}/reasoningEngines/${RE_ENGINE_ID}"
+    fi
+    for role in "roles/aiplatform.user" "roles/cloudtrace.agent" "roles/telemetry.writer" "roles/logging.logWriter"; do
+        gcloud projects remove-iam-policy-binding "${PROJECT_ID}" \
+            --member="${AGENT_SPIFFE}" \
+            --role="${role}" \
+            --condition=None \
+            --quiet &>/dev/null || true
+    done
     log_success "Reasoning Engine removido."
 else
     log_info "Nenhum Reasoning Engine ativo encontrado para remoção."
