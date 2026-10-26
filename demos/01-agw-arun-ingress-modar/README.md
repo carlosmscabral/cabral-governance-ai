@@ -105,7 +105,17 @@ Valide os guardrails de segurança executando os testes em Português do Brasil:
 ```
 
 > [!NOTE]
-> **Importante para Demonstrações**: Para acionar a governança do Model Armor e do Agent Gateway, os testes devem ser realizados via API externa (`./test.sh` ou `curl`). O **Playground** interativo do Console da Vertex AI conecta-se ao canal privado de depuração administrativa (`vais-query-reasoning-engine`), contornando o Gateway de borda. Consulte o [Guia Visual de Arquitetura](./VISUAL_GUIDE.md#fluxo-4-comparativo-arquitetural--tráfego-de-produção-vs-playground-do-console) para mais detalhes.
+> **Importante para Demonstrações**: Para acionar a governança do Model Armor e do Agent Gateway, os testes devem ser realizados via API externa (`./test.sh`, `curl` ou pelo **[Agent Console & Wire Inspector](../../tools/agent-console/README.md)**). O **Playground** interativo do Console da Vertex AI conecta-se ao canal privado de depuração administrativa (`vais-query-reasoning-engine`), contornando o Gateway de borda. Consulte o [Guia Visual de Arquitetura](./VISUAL_GUIDE.md#fluxo-4-comparativo-arquitetural--tráfego-de-produção-vs-playground-do-console) para mais detalhes.
+
+### Passo 3.1 (Opcional): Apresentação Visual com Agent Console & Wire Inspector
+Para conduzir a demonstração em uma interface visual Split-View (**Chat + Inspetor HTTP/SSE estilo Postman**) com os 4 atos pré-carregados (`scenarios.json`):
+```bash
+# Como Plugin Nativo no painel lateral do Jetski Web (Cloudtop):
+../../tools/agent-console/install_jetski_plugin.sh
+
+# Ou em servidor local standalone (http://127.0.0.1:8090):
+../../tools/agent-console/start.sh
+```
 
 ### Passo 4: Desprovisionamento (Zero Residuals)
 Para remover todos os recursos provisionados sem deixar custos residuais ou permissões órfãs:
@@ -120,6 +130,9 @@ Para remover todos os recursos provisionados sem deixar custos residuais ou perm
 ```text
 demos/01-agw-arun-ingress-modar/
 ├── README.md                          # Este guia completo
+├── VISUAL_GUIDE.md                    # Diagramas C4, sequence walks e wire formats
+├── DEMO_GUIDE.md                      # Roteiro de apresentação ao vivo (4 atos) e FAQ
+├── scenarios.json                     # Playbook interativo para o Agent Console & Wire Inspector
 ├── env.sh                             # Autodescoberta de projeto e variáveis centrais
 ├── deploy.sh                          # Orquestrador mestre de deploy
 ├── test.sh                            # Suíte de testes automatizada em PT-BR

@@ -34,6 +34,7 @@ Cada diretório dentro de `demos/` é autocontido e deve conter:
 | `README.md` | Obrigatório | Visão geral, diagrama de arquitetura Mermaid, início rápido, tabela de cenários de teste e matriz IAM. |
 | `VISUAL_GUIDE.md` | Obrigatório | Guia visual didático (C4 em 3 níveis, sequence diagrams, wire format e código anotado). |
 | `DEMO_GUIDE.md` | Obrigatório | Roteiro de apresentação ao vivo para clientes (pitch de 60s, atos da demo, comandos cURL e FAQ). |
+| `scenarios.json` | Recomendado | Manifesto declarativo de personas e cenários (Atos da Demo) carregado automaticamente pelo `tools/agent-console/`. |
 
 ---
 
@@ -69,3 +70,16 @@ O repositório conta com um orquestrador de CI em [`scripts/ci_healthcheck.sh`](
    - **Execução (`deploy.sh` + `test.sh`)**: Garante que a infraestrutura e o agente estão sincronizados no Argolis e executa todos os testes ponta a ponta.
 3. **Protocolo de Auto-Healing (Em Caso de Falha `exit 1`)**:
    - O agente autônomo inspeciona os logs em `.state/ci_logs/`, diagnostica a causa raiz (drift de modelo, depreciação de classe no SDK ADK/Vertex AI ou mudança de flag no `gcloud`), aplica o fix no código, reexecuta `deploy.sh` + `test.sh` para deixar o ambiente de demo 100% operacional no Argolis e registra uma **Issue + Pull Request** no repositório GitHub (`carlosmscabral/cabral-governance-ai`).
+
+---
+
+## 5. Console Visual de Demonstração (`tools/agent-console/`)
+
+Para apresentações ao vivo sem depender apenas de `curl` no terminal, o repositório inclui o **Agent Console & Wire Inspector** ([`tools/agent-console/`](./tools/agent-console/README.md)):
+
+1. **Modos de Uso**:
+   - **Plugin Nativo do Jetski Web**: `./tools/agent-console/install_jetski_plugin.sh` instala o painel lateral (`~/.gemini/config/plugins/agent_console/`) servido via ÜberProxy.
+   - **Servidor Local Standalone**: `./tools/agent-console/start.sh` inicia em `http://127.0.0.1:8090`.
+2. **Integração Automática com Demos**:
+   - O console descobre automaticamente qualquer pasta `demos/*` lendo `.state/agent_info.json`, `env.sh` e `scenarios.json`.
+   - Sempre que criar uma nova demo, inclua um arquivo `scenarios.json` com os atos da demonstração (`safe`, `dlp`, `attack`) para habilitar o disparo em 1 clique no console.

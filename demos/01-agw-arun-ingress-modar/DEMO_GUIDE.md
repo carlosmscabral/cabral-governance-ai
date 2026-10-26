@@ -51,7 +51,18 @@ source env.sh
 > **⚠️ IMPORTANTE: NÃO UTILIZE O PLAYGROUND DO CONSOLE GCP PARA A DEMO AO VIVO!**
 > 
 > - **Causa Técnica**: O **Playground** interativo do **Vertex AI Console** comunica-se diretamente com o canal de depuração administrativa interna do contêiner (`/api/stream_reasoning_engine` com identidade interna `user.id: "vais-query-reasoning-engine"`), **bypasseando totalmente o Agent Gateway e as políticas de rede**.
-> - **Como demonstrar**: Para que as políticas de segurança do **Model Armor** e do **Cloud DLP** sejam executadas e interceptem o tráfego, todas as interações devem ser enviadas via **API externa / Agent Gateway Endpoint** (usando o script `./test.sh`, comandos `curl` ou uma aplicação cliente conectada via SDK).
+> - **Como demonstrar**: Para que as políticas de segurança do **Model Armor** e do **Cloud DLP** sejam executadas e interceptem o tráfego, todas as interações devem ser enviadas via **API externa / Agent Gateway Endpoint** — utilizando o **[Agent Console & Wire Inspector](../../tools/agent-console/README.md)** (recomendado para apresentações visuais), comandos `curl` ou o script `./test.sh`.
+
+### Opção Visual Recomendada: Agent Console & Wire Inspector
+Em vez de colar comandos `curl` manualmente durante a reunião, abra o **Agent Console & Wire Inspector**:
+```bash
+# Instalar como Plugin no painel lateral do Jetski Web (Cloudtop):
+../../tools/agent-console/install_jetski_plugin.sh
+
+# Ou rodar standalone em http://127.0.0.1:8090:
+../../tools/agent-console/start.sh
+```
+O arquivo [`scenarios.json`](./scenarios.json) carrega automaticamente os botões de 1 clique para os **Atos 1, 2 e 3**, exibindo ao vivo os cabeçalhos HTTP, chunks SSE, chamadas de ferramentas (`list_customer_files` / `read_customer_file`), controle de sessão (`+ Nova Sessão` / `🔄 Zerar Sessão`) e os vereditos do Model Armor e Cloud DLP.
 
 ### Terminal 2: Streaming de Logs de Segurança em Tempo Real
 Deixe este comando rodando em uma janela lateral ou monitor secundário para mostrar os vereditos do Model Armor ao vivo:

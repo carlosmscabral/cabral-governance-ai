@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Console &amp; Wire Inspector — Governance AI Demos</title>
+  <link rel="stylesheet" href="/styles.css?v=0.3" />
+  <script src="/preload.js"></script>
+</head>
+<body>
+  <!-- Top Global Header -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-icon">🛡️</span>
+      <div>
+        <div class="brand-title">Agent Console &amp; Wire Inspector</div>
+        <div class="brand-subtitle">Simulador de Canal &amp; Inspetor HTTP/SSE para Demos de Governança</div>
+      </div>
+    </div>
+
+    <div class="topbar-controls">
+      <div class="control-group">
+        <label for="demoSelect">Demo Alvo</label>
+        <select id="demoSelect" title="Selecionar Demo do Repositório"></select>
+      </div>
+
+      <div class="control-group">
+        <label for="profileSelect">Perfil de Protocolo</label>
+        <select id="profileSelect" title="Selecionar Dialeto HTTP/SSE">
+          <option value="vertex_stream_query">Vertex :streamQuery (SSE)</option>
+          <option value="adk_run_sse">ADK Passthrough (/api/run_sse)</option>
+          <option value="custom_http">Custom HTTP/SSE (Modo Postman)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="personaInput">Persona (user_id)</label>
+        <input id="personaInput" list="personaList" type="text" value="cliente-demo" placeholder="user_id..." />
+        <datalist id="personaList"></datalist>
+      </div>
+
+      <!-- Layout Focus Quick Buttons -->
+      <div class="control-group">
+        <label>Foco de Tela (Split)</label>
+        <div class="split-preset-group" title="Ajustar proporção entre Chat (Esquerda) e Inspector (Direita)">
+          <button class="split-preset-btn" data-split="70" type="button">◀ Chat</button>
+          <button class="split-preset-btn active" data-split="50" type="button">50/50</button>
+          <button class="split-preset-btn" data-split="30" type="button">Inspector ▶</button>
+        </div>
+      </div>
+
+      <button id="authDrawerBtn" class="auth-pill" type="button" title="Configurar Autenticação, Token Cache e 3LO">
+        <span id="authStatusDot" class="status-dot ok"></span>
+        <span id="authStatusText">gcloud (argolis)</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Endpoint & Session Bar -->
+  <section class="endpoint-bar">
+    <select id="httpMethodSelect" class="method-select">
+      <option value="POST">POST</option>
+      <option value="GET">GET</option>
+    </select>
+    <input id="endpointUrlInput" class="endpoint-input" type="text" placeholder="https://us-central1-aiplatform.googleapis.com/v1/projects/..." />
+    <span id="engineBadge" class="engine-badge" title="Status do Reasoning Engine na Demo">Engine: --</span>
+
+    <!-- Session Management Controls (Works on both Vertex :query and ADK /sessions) -->
+    <div class="session-controls">
+      <span id="sessionBadge" class="session-badge" title="Modo de sessão atual (Efêmera por turno ou Sessão Persistente no Agent Runtime)">
+        Sessão: <code id="activeSessionId">Efêmera (stateless)</code>
+      </span>
+      <button id="createSessionBtn" class="btn btn-secondary btn-sm" type="button" title="Criar uma nova sessão persistente no servidor (via Vertex :query create_session ou ADK /sessions)">
+        + Nova Sessão
+      </button>
+      <button id="resetSessionBtn" class="btn btn-ghost btn-sm" type="button" title="Deletar/zerar a sessão ativa e limpar o contexto conversacional">
+        🔄 Zerar Sessão
+      </button>
+    </div>
+
+    <button id="clearChatBtn" class="btn btn-ghost btn-sm" type="button" title="Limpar histórico de turnos na tela">
+      🗑️ Limpar Tela
+    </button>
+  </section>
+
+  <!-- Main Resizable Split View -->
+  <main id="splitLayout" class="split-layout">
+    <!-- LEFT PANE: Chat Channel + Demo Playbook Scenarios -->
+    <section id="paneLeft" class="pane pane-left">
+      <!-- Scenarios Playbook Strip -->
+      <div class="scenarios-panel">
+        <div class="scenarios-header">
+          <div class="scenarios-title">
+            <span>🎬 Roteiro de Cenários da Demo (Playbook)</span>
+            <span id="scenarioCountBadge" class="badge-muted">0 cenários</span>
+          </div>
+          <label class="toggle-inline" title="Quando marcado, clicar num cenário já dispara a requisição imediatamente">
+            <input id="autoSendScenarioToggle" type="checkbox" checked />
+            <span>Disparar ao clicar</span>
+          </label>
+        </div>
+        <div id="scenariosGrid" class="scenarios-grid"></div>
+        <div id="scenarioPresenterNote" class="presenter-note hidden"></div>
+      </div>
+
+      <!-- Chat Conversation Feed -->
+      <div id="chatFeed" class="chat-feed">
+        <div class="empty-state">
+          <div class="empty-icon">💬</div>
+          <h3>Canal Pronto para Simulação</h3>
+          <p>Clique em um dos <strong>Cenários da Demo (Atos 1 a 3)</strong> acima ou envie uma mensagem abaixo. Arraste a <strong>barra divisória central</strong> para dar foco ao Chat ou ao Wire Inspector.</p>
+        </div>
+      </div>
+
+      <!-- Collapsible Raw Request Override (Postman Mode) -->
+      <div id="rawComposerDrawer" class="raw-drawer hidden">
+        <div class="raw-drawer-header">
+          <span>⚙️ Override de Headers &amp; JSON Body (Modo Postman)</span>
+          <button id="resetTemplateBtn" class="btn-link" type="button">Restaurar Template do Perfil</button>
+        </div>
+        <div class="raw-editors">
+          <div class="raw-editor-col">
+            <label for="customHeadersEditor">Headers Extras (JSON)</label>
+            <textarea id="customHeadersEditor" spellcheck="false" rows="4"></textarea>
+          </div>
+          <div class="raw-editor-col">
+            <label for="customBodyEditor">Body Override (JSON — use <code>{{PROMPT}}</code>, <code>{{USER_ID}}</code>, <code>{{SESSION_ID}}</code>)</label>
+            <textarea id="customBodyEditor" spellcheck="false" rows="4"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Message Composer -->
+      <footer class="composer">
+        <div class="composer-toolbar">
+          <button id="toggleRawDrawerBtn" class="btn-chip" type="button">
+            <span>🔧 Editar Payload / Headers (Postman)</span>
+          </button>
+          <span id="sessionModeHint" class="hint-text">Dica: use "+ Nova Sessão" acima para manter memória multi-turn no Agent Runtime</span>
+        </div>
+        <div class="composer-input-row">
+          <textarea
+            id="promptInput"
+            rows="2"
+            placeholder="Digite a mensagem para o agente (Enter para enviar, Shift+Enter para nova linha)..."
+          ></textarea>
+          <button id="sendBtn" class="btn btn-primary send-btn" type="button">
+            <span>Enviar</span>
+            <span class="send-arrow">▶</span>
+          </button>
+        </div>
+      </footer>
+    </section>
+
+    <!-- DRAGGABLE CENTRAL RESIZER HANDLE -->
+    <div id="paneResizer" class="pane-resizer" title="Arraste para redimensionar os painéis (Duplo-clique para voltar a 50/50)">
+      <div class="resizer-grip">⋮</div>
+    </div>
+
+    <!-- RIGHT PANE: Wire Inspector -->
+    <section id="paneRight" class="pane pane-right">
+      <div class="inspector-header">
+        <div class="inspector-title-row">
+          <div>
+            <span class="inspector-eyebrow">WIRE INSPECTOR</span>
+            <h2 id="inspectorTurnTitle">Nenhuma chamada selecionada</h2>
+          </div>
+          <div id="inspectorMetrics" class="inspector-metrics hidden">
+            <span id="metricStatusBadge" class="http-badge">200 OK</span>
+            <span id="metricTtftBadge" class="metric-pill" title="Time To First Byte / Header">TTFT: -- ms</span>
+            <span id="metricTotalBadge" class="metric-pill" title="Tempo Total da Requisição">Total: -- ms</span>
+            <span id="metricChunksBadge" class="metric-pill" title="Quantidade de eventos SSE recebidos">Chunks: 0</span>
+          </div>
+        </div>
+
+        <div id="verdictBanner" class="verdict-banner hidden"></div>
+        <div id="leakWarningBanner" class="leak-warning-banner hidden"></div>
+
+        <!-- Inspector Tabs -->
+        <nav class="inspector-tabs">
+          <button class="tab-btn active" data-tab="request" type="button">
+            📤 Request <span class="tab-sub">Headers &amp; Payload</span>
+          </button>
+          <button class="tab-btn" data-tab="response" type="button">
+            📥 Response <span class="tab-sub">Status, Tools &amp; Body</span>
+          </button>
+          <button class="tab-btn" data-tab="chunks" type="button">
+            🌊 SSE Timeline <span id="tabChunkCounter" class="tab-counter">0</span>
+          </button>
+          <button class="tab-btn" data-tab="curl" type="button">
+            💻 cURL <span class="tab-sub">Reproduzir no CLI</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Tab Contents -->
+      <div class="inspector-body">
+        <!-- TAB 1: REQUEST -->
+        <div id="tab-request" class="tab-panel active">
+          <div class="inspector-section">
+            <div class="section-bar">
+              <h3>Linha de Requisição</h3>
+              <span id="reqTimestamp" class="timestamp-label">--</span>
+            </div>
+            <div id="reqLineBox" class="code-line-box">Aguardando envio de requisição...</div>
+          </div>
+
+          <div class="inspector-section">
+            <div class="section-bar">
+              <h3>Request Headers (Enviados no Fio)</h3>
+              <button class="btn-copy" data-copy-target="reqHeadersPre" type="button">Copiar JSON</button>
+            </div>
+            <pre id="reqHeadersPre" class="code-block">{}</pre>
+          </div>
+
+          <div class="inspector-section">
+            <div class="section-bar">
+              <h3>Request Payload (JSON Body)</h3>
+              <button class="btn-copy" data-copy-target="reqBodyPre" type="button">Copiar Payload</button>
+            </div>
+            <pre id="reqBodyPre" class="code-block">{}</pre>
+          </div>
+        </div>
+
+        <!-- TAB 2: RESPONSE -->
+        <div id="tab-response" class="tab-panel">
+          <div id="toolCallsSection" class="inspector-section hidden">
+            <div class="section-bar">
+              <h3>🔧 Chamadas de Ferramentas Detectadas no Stream (ADK Tool Calls)</h3>
+            </div>
+            <div id="toolCallsContainer" class="tool-calls-list"></div>
+          </div>
+
+          <div class="inspector-section">
+            <div class="section-bar">
+              <h3>Texto / Veredito Consolidado da Resposta</h3>
+              <button class="btn-copy" data-copy-target="respConsolidatedPre" type="button">Copiar Texto</button>
+            </div>
+            <pre id="respConsolidatedPre" class="code-block">Aguardando resposta...</pre>
+          </div>
+
+          <div class="inspector-section">
+            <div class="section-bar">
+              <h3>Response Headers (Recebidos do Gateway / Vertex AI)</h3>
+              <button class="btn-copy" data-copy-target="respHeadersPre" type="button">Copiar Headers</button>
+            </div>
+            <pre id="respHeadersPre" class="code-block">{}</pre>
+          </div>
+
+          <div class="inspector-section">
+            <div class="section-bar">
+              <h3>Payload Bruto Completo (Raw SSE / HTTP Body)</h3>
+              <button class="btn-copy" data-copy-target="respRawPre" type="button">Copiar Bruto</button>
+            </div>
+            <pre id="respRawPre" class="code-block"></pre>
+          </div>
+        </div>
+
+        <!-- TAB 3: SSE CHUNKS TIMELINE -->
+        <div id="tab-chunks" class="tab-panel">
+          <div class="inspector-section">
+            <div class="section-bar">
+              <h3>Timeline de Eventos Server-Sent Events (SSE)</h3>
+              <span class="hint-text">Cada frame recebido do endpoint em ordem cronológica</span>
+            </div>
+            <div id="chunksTimeline" class="chunks-timeline">
+              <div class="empty-inline">Nenhum chunk recebido ainda.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: CURL -->
+        <div id="tab-curl" class="tab-panel">
+          <div class="inspector-section">
+            <div class="section-bar">
+              <h3>Comando cURL Equivalente</h3>
+              <button class="btn-copy" data-copy-target="curlPre" type="button">📋 Copiar cURL</button>
+            </div>
+            <pre id="curlPre" class="code-block"># Envie uma consulta para gerar o comando cURL exato</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- AUTH & 3LO CONFIGURATION MODAL -->
+  <div id="authModal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <h2>🔐 Autenticação, Cache de Tokens &amp; Identidade Delegada (3LO / OBO)</h2>
+          <p class="modal-sub">Gerencie como o Agent Console autentica no transporte GCP e propaga identidade do usuário.</p>
+        </div>
+        <button id="closeAuthModalBtn" class="btn-close" type="button">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Layer 1: Transport Auth -->
+        <div class="auth-layer-box">
+          <div class="layer-title">Camada 1 — Autenticação de Transporte (Client ➔ Agent Gateway / Runtime)</div>
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="authModeSelect">Fonte do Bearer Token</label>
+              <select id="authModeSelect">
+                <option value="access">gcloud Access Token (OAuth2 — Padrão Vertex AI)</option>
+                <option value="identity">gcloud Identity Token (OIDC — Padrão Cloud Run)</option>
+                <option value="manual">Token Bearer Manual (Colar JWT/OAuth)</option>
+                <option value="none">Sem Header Authorization</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label for="gcloudConfigInput">Configuração do gcloud</label>
+              <input id="gcloudConfigInput" type="text" value="argolis" placeholder="argolis" />
+            </div>
+          </div>
+
+          <div id="manualTokenRow" class="form-field hidden">
+            <label for="manualTokenInput">Bearer Token Manual</label>
+            <input id="manualTokenInput" type="password" placeholder="Cole seu OAuth2 Access Token ou OIDC JWT..." />
+          </div>
+
+          <div class="token-status-card">
+            <div>
+              <div class="token-meta-line"><strong>Conta Ativa:</strong> <span id="authAccountLabel">--</span></div>
+              <div class="token-meta-line"><strong>Token Mascarado:</strong> <code id="authMaskedToken">--</code></div>
+              <div class="token-meta-line"><strong>Atualizado em:</strong> <span id="authFetchedAt">--</span> (<span id="authTtlLabel">TTL: --</span>)</div>
+            </div>
+            <button id="refreshTokenBtn" class="btn btn-secondary" type="button">🔄 Renovar Token Agora</button>
+          </div>
+        </div>
+
+        <!-- Layer 2: Delegated User Context & 3LO Readiness -->
+        <div class="auth-layer-box">
+          <div class="layer-title">
+            <span>Camada 2 — Contexto Delegado do Usuário, Cascateamento (OBO) &amp; OAuth Code (3LO)</span>
+            <span class="badge-ready">Arquitetura Preparada</span>
+          </div>
+          <p class="layer-desc">
+            Para demos de cascateamento de permissões ou 3-Legged OAuth (usuário delegando acesso a ferramentas/MCPs), você pode injetar um segundo token de sujeito ou usar o receptor local de callback OAuth (<code>http://localhost:8090/oauth/callback</code>).
+          </p>
+
+          <label class="checkbox-row">
+            <input id="delegatedEnableToggle" type="checkbox" />
+            <span>Injetar Header de Propagação / Token Delegado nas requisições</span>
+          </label>
+
+          <div id="delegatedFields" class="form-grid hidden">
+            <div class="form-field">
+              <label for="delegatedHeaderName">Nome do Header Delegado</label>
+              <input id="delegatedHeaderName" type="text" value="X-Forwarded-Authorization" />
+            </div>
+            <div class="form-field">
+              <label for="delegatedTokenInput">Subject Token / OAuth Token do Usuário</label>
+              <input id="delegatedTokenInput" type="password" placeholder="Token OAuth delegado pelo usuário..." />
+            </div>
+          </div>
+
+          <div class="oauth-callback-info">
+            <div>
+              <strong>Callback 3LO Local Ativo:</strong> <code>http://localhost:8090/oauth/callback</code>
+              <div class="hint-text">O redirect OAuth 2.0 ocorre via HTTP 302 no próprio navegador do apresentador — funciona direto em <code>localhost</code> sem exigir deploy público na nuvem.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="saveAuthConfigBtn" class="btn btn-primary" type="button">Salvar Configurações de Auth</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js?v=0.3"></script>
+</body>
+</html>

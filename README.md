@@ -26,12 +26,20 @@ cabral-governance-ai/
 ├── .gitignore                  # Global ignore rules (credentials, state, build artifacts)
 ├── scripts/
 │   └── ci_healthcheck.sh       # Automated healthcheck, SDK upgrade & drift detector across all demos
+├── tools/
+│   └── agent-console/          # Local Web UI & Jetski Plugin ("Chat + Lightweight Postman")
+│       ├── README.md           # Tool documentation & wire inspection guide
+│       ├── start.sh            # Standalone (:8090) & Jetski Sidecar launcher
+│       ├── install_jetski_plugin.sh # Installs native Jetski Web UI Plugin AuxPane
+│       ├── server.py           # FastAPI streaming proxy, gcloud auth cache & session API
+│       └── static/             # Zero-build split-view frontend (HTML/CSS/JS)
 │
 └── demos/                      # Individual governance demos
     ├── 01-agw-arun-ingress-modar/
     │   ├── README.md           # Scenario documentation & walkthrough
     │   ├── VISUAL_GUIDE.md     # Progressive C4 diagrams, sequence walks & wire formats
     │   ├── DEMO_GUIDE.md       # Live customer presentation script (4 acts) & FAQ
+    │   ├── scenarios.json      # Playbook manifest for Agent Console & Wire Inspector
     │   ├── env.sh              # Standard environment (cabral-governance-ai + gemini-3.8-flash @ global)
     │   ├── deploy.sh           # Idempotent deployment script
     │   ├── test.sh             # Automated PT-BR end-to-end test suite
@@ -53,6 +61,7 @@ When adding a new demo under `demos/<demo-name>`, adhere to the contract defined
 | `README.md` | Problem statement, architecture diagram, prerequisites, and step-by-step demo steps. |
 | `VISUAL_GUIDE.md` | Progressive architecture diagrams, sequence walks, wire formats, and annotated code. |
 | `DEMO_GUIDE.md` | Presenter playbook with 60s pitch, live demo acts, cURL commands, and customer FAQ. |
+| `scenarios.json` | Demo Playbook manifest (personas, acts, prompts, and presenter notes) auto-loaded by `tools/agent-console/`. |
 | `env.sh` | Standard environment variables (`PROJECT_ID=cabral-governance-ai`, `MODEL_NAME=gemini-3.8-flash` on `global`). |
 | `deploy.sh` | Idempotent bash script to configure GCP services, deploy agents/policies, and output test endpoints. |
 | `test.sh` | Non-interactive PT-BR test suite verifying positive business queries, active guardrails, and audit logs. |
@@ -75,6 +84,29 @@ Before deploying any demo:
    gcloud config set project <YOUR_PROJECT_ID>
    ```
 3. **Required Tools**: `bash`, `jq`, `curl`, and optionally `terraform` depending on the demo.
+
+---
+
+## 🖥️ Interactive Demo UI: Agent Console & Wire Inspector
+
+Instead of relying solely on terminal `curl` commands during customer presentations, use the built-in **Agent Console & Wire Inspector** ([`tools/agent-console/`](tools/agent-console)):
+
+### Option A: Native Jetski Web UI Plugin (Cloudtop Auxiliary Pane)
+```bash
+./tools/agent-console/install_jetski_plugin.sh
+```
+Click the **🛡️ Agent Console & Wire Inspector** icon in the right-hand sidebar of Jetski Web to open the interactive split-pane directly inside your workspace.
+
+### Option B: Standalone Local Server (`http://127.0.0.1:8090`)
+```bash
+./tools/agent-console/start.sh
+```
+
+Key capabilities:
+* **Auto-Discovered Demo Playbooks**: One-click scenario buttons (`scenarios.json`) and automatic `.state/agent_info.json` endpoint discovery.
+* **Resizable Split-View & Live Wire Inspector ("Lightweight Postman")**: Draggable central divider (`70/30`, `50/50`, `30/70` presets) with real-time inspection of Request Headers, JSON Payloads, Response Latency (`TTFT` + `Total ms`), ADK Tool Calls (`function_call`/`function_response`), SSE Chunk Timelines, and Governance Verdict banners (`ALLOW`, `DLP REDACT`, `MODEL ARMOR INGRESS/EGRESS BLOCK`, plus streaming leak warnings).
+* **Server-Side Session Lifecycle (`+ Nova Sessão` / `🔄 Zerar Sessão`)**: Creates and deletes persistent sessions on `VertexAiSessionService` via `:query` (`create_session` / `delete_session`) or switches to stateless/ephemeral mode.
+* **Two-Layer Auth & 3LO Readiness**: Automatic `gcloud` token caching (`argolis`) plus delegated user identity headers (`X-Forwarded-Authorization`) and local `/oauth/callback` receiver.
 
 ---
 
