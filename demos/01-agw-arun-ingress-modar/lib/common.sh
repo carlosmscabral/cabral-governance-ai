@@ -81,7 +81,7 @@ wait_for_resource() {
     log_info "Aguardando $desc ficar pronto..."
     local count=0
     until "${check_cmd[@]}" &>/dev/null; do
-        ((count++))
+        ((++count))
         if ((count >= max_retries)); then
             log_error "Tempo esgotado aguardando por $desc ($((max_retries * delay))s)."
             return 1

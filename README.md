@@ -20,17 +20,25 @@ Each demo follows a strict self-containment contract:
 
 ```text
 cabral-governance-ai/
+├── AGENTS.md                   # Engineering rules, testing contract & weekly self-healing CI spec
 ├── LICENSE                     # Apache 2.0 License
 ├── README.md                   # Repository overview and demo directory
 ├── .gitignore                  # Global ignore rules (credentials, state, build artifacts)
+├── scripts/
+│   └── ci_healthcheck.sh       # Automated healthcheck, SDK upgrade & drift detector across all demos
 │
 └── demos/                      # Individual governance demos
-    ├── 01-sample-governance/   # (Example demo structure)
+    ├── 01-agw-arun-ingress-modar/
     │   ├── README.md           # Scenario documentation & walkthrough
-    │   ├── deploy.sh           # Deployment script
-    │   ├── undeploy.sh         # Teardown / cleanup script
-    │   ├── infra/              # Terraform or gcloud provisioning scripts
-    │   └── src/                # Agent source code, policies, and configs
+    │   ├── VISUAL_GUIDE.md     # Progressive C4 diagrams, sequence walks & wire formats
+    │   ├── DEMO_GUIDE.md       # Live customer presentation script (4 acts) & FAQ
+    │   ├── env.sh              # Standard environment (cabral-governance-ai + gemini-3.8-flash @ global)
+    │   ├── deploy.sh           # Idempotent deployment script
+    │   ├── test.sh             # Automated PT-BR end-to-end test suite
+    │   ├── undeploy.sh         # Zero-residuals teardown script
+    │   ├── cfg/                # Gateway, Service Extension & Authz Policy templates
+    │   ├── scripts/            # Modular provisioning steps (01..05)
+    │   └── src/                # ADK agent source code and CRM datasets
     └── ...
 ```
 
@@ -38,15 +46,18 @@ cabral-governance-ai/
 
 ## 🛠️ Demo Directory Convention
 
-When adding a new demo under `demos/<demo-name>`, adhere to the following contract:
+When adding a new demo under `demos/<demo-name>`, adhere to the contract defined in [`AGENTS.md`](./AGENTS.md):
 
 | File / Directory | Description |
 | :--- | :--- |
 | `README.md` | Problem statement, architecture diagram, prerequisites, and step-by-step demo steps. |
+| `VISUAL_GUIDE.md` | Progressive architecture diagrams, sequence walks, wire formats, and annotated code. |
+| `DEMO_GUIDE.md` | Presenter playbook with 60s pitch, live demo acts, cURL commands, and customer FAQ. |
+| `env.sh` | Standard environment variables (`PROJECT_ID=cabral-governance-ai`, `MODEL_NAME=gemini-3.8-flash` on `global`). |
 | `deploy.sh` | Idempotent bash script to configure GCP services, deploy agents/policies, and output test endpoints. |
+| `test.sh` | Non-interactive PT-BR test suite verifying positive business queries, active guardrails, and audit logs. |
 | `undeploy.sh` | Safe cleanup script that tears down all provisioned resources and IAM bindings. |
 | `src/` | Agent definitions, tools, evaluation sets, or policy engines. |
-| `infra/` | Terraform modules, Cloud Run definitions, or IAM policy configurations. |
 
 ---
 

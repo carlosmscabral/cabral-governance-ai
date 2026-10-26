@@ -92,7 +92,7 @@ flowchart LR
 ### Ato 1: Operação Normal de Negócios (Consulta em PT-BR)
 
 #### 🎙️ O que falar para o cliente:
-> *"Primeiro, vamos ver o agente funcionando normalmente. Temos um assistente corporativo de CRM construído com o Google ADK e Gemini Flash Latest que responde em Português do Brasil e consulta dados de clientes no Cloud Storage."*
+> *"Primeiro, vamos ver o agente funcionando normalmente. Temos um assistente corporativo de CRM construído com o Google ADK e Gemini 3.8 Flash (endpoint global) que responde em Português do Brasil e consulta dados de clientes no Cloud Storage."*
 
 #### 💻 O que executar:
 ```bash

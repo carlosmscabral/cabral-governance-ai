@@ -29,7 +29,7 @@ flowchart LR
     end
 
     subgraph AgentZone["3. Execução do Agente"]
-        Agent["🤖 Vertex AI Agent Runtime (ADK + gemini-flash-latest)"]
+        Agent["🤖 Vertex AI Agent Runtime (ADK + gemini-3.8-flash @ global)"]
     end
 
     subgraph DataZone["4. Repositório de Dados"]
@@ -84,7 +84,7 @@ flowchart TD
 
     subgraph RuntimeTier["Vertex AI Platform (us-central1 & global)"]
         RE_Engine["Reasoning Engine: agw-modar-agent-crm (Identidade SPIFFE)"]
-        GeminiGlobal["Gemini Flash Latest (Publisher Endpoint: global)"]
+        GeminiGlobal["Gemini 3.8 Flash (Publisher Endpoint: global)"]
     end
 
     subgraph StorageTier["Armazenamento Privado"]
@@ -122,8 +122,8 @@ flowchart TD
              │                                              │
              ▼                                              ▼
 +---------------------------------------+       +-----------------------------------+
-| VERTEX AI AGENT RUNTIME               |       | RESPOSTA IMEDIATA: HTTP 500       |
-|  ├── ADK Agent (gemini-flash-latest)  |       | "Model Armor: Prompt violates     |
+| VERTEX AI AGENT RUNTIME               |       | RESPOSTA IMEDIATA: HTTP 403       |
+|  ├── ADK Agent (gemini-3.8-flash)     |       | "Model Armor: Prompt violates     |
 |  ├── Identidade SPIFFE Workload       |       |  content security configurations" |
 |  └── Leitura GCS (customers_*.csv)    |       +-----------------------------------+
 +---------------------------------------+
@@ -293,7 +293,7 @@ sequenceDiagram
 | PATH: /v1/projects/{PROJECT}/locations/us-central1/           |
 |       reasoningEngines/{ENGINE_ID}:streamQuery                |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-| Headers: Authorization: Bearer ya29.xxxx                      |
+| Headers: Authorization: Bearer <OAUTH_ACCESS_TOKEN>           |
 |          Content-Type: application/json                       |
 |          x-goog-user-project: YOUR_PROJECT_ID                 |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -322,12 +322,12 @@ data: {"usageMetadata":{"promptTokenCount":142,"candidatesTokenCount":58}}
 ### Agente ADK com Suporte a PT-BR e Modelo Global (`src/agent/agent.py`)
 
 ```python
-# (1) Configuração do modelo: gemini-flash-latest no endpoint global
+# (1) Configuração do modelo: gemini-3.8-flash sempre no endpoint global
 llm = Gemini(
-    model=os.getenv("MODEL_NAME", "gemini-flash-latest"),
+    model=os.getenv("MODEL_NAME", "gemini-3.8-flash"),
     client_kwargs={
         "vertexai": True,
-        "location": os.getenv("MODEL_LOCATION", "global"), # (2) Modelo servido globalmente
+        "location": "global", # (2) Modelo servido globalmente
         "project": os.getenv("PROJECT_ID", os.getenv("GOOGLE_CLOUD_PROJECT", "")) # (3) Projeto explicitamente isolado
     }
 )
@@ -354,7 +354,7 @@ agent = Agent(
 )
 ```
 
-- **(1)** Garante o uso do modelo `gemini-flash-latest` conforme especificado no projeto.
+- **(1)** Garante o uso do modelo `gemini-3.8-flash` conforme especificado no projeto.
 - **(2)** A localização da inferência é fixada em `global`, desacoplada da região da infraestrutura (`us-central1`).
 - **(3)** Impede que variáveis de ambiente locais do desenvolvedor (ex: projetos legados) vazem para o runtime serializado.
 - **(4)** A ferramenta executa sob a identidade SPIFFE atribuída ao Reasoning Engine, herdando privilégio mínimo (`roles/storage.objectViewer`).

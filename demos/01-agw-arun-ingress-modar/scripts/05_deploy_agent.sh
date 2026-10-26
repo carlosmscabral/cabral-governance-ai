@@ -73,23 +73,52 @@ if [[ ! -f "${VENV_DIR}/bin/python" ]]; then
 fi
 PYTHON_EXEC="${VENV_DIR}/bin/python"
 
+SAVED_ENGINE_ID=""
 if [[ -f "${AGENT_INFO_FILE}" ]]; then
     SAVED_ENGINE_ID=$(jq -r '.engine_id // empty' "${AGENT_INFO_FILE}")
-    if [[ -n "${SAVED_ENGINE_ID}" ]]; then
-        log_verify "Verificando se Reasoning Engine '${SAVED_ENGINE_ID}' ainda existe..."
-        if curl -s -f -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-            -H "x-goog-user-project: ${PROJECT_ID}" \
-            "https://${REGION}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${REGION}/reasoningEngines/${SAVED_ENGINE_ID}" &>/dev/null; then
-            log_info "Reasoning Engine '${SAVED_ENGINE_ID}' já está ativo e operacional."
+fi
+
+TOKEN=$(gcloud auth print-access-token)
+if [[ -z "${SAVED_ENGINE_ID}" ]]; then
+    log_info "Verificando se já existe um Reasoning Engine '${RE_DISPLAY_NAME}' no Vertex AI..."
+    SAVED_ENGINE_ID=$(curl -s -H "Authorization: Bearer ${TOKEN}" \
+        -H "x-goog-user-project: ${PROJECT_ID}" \
+        "https://${REGION}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${REGION}/reasoningEngines" | \
+        jq -r '.reasoningEngines[]? | select(.displayName=="'"${RE_DISPLAY_NAME}"'") | .name' | awk -F'/' '{print $NF}' | head -n 1 || true)
+fi
+
+EXISTING_ENGINE_ARG=()
+if [[ -n "${SAVED_ENGINE_ID}" ]]; then
+    log_verify "Verificando estado e modelo do Reasoning Engine '${SAVED_ENGINE_ID}'..."
+    EXISTING_META=$(curl -s -f -H "Authorization: Bearer ${TOKEN}" \
+        -H "x-goog-user-project: ${PROJECT_ID}" \
+        "https://${REGION}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${REGION}/reasoningEngines/${SAVED_ENGINE_ID}" 2>/dev/null || true)
+    if [[ -n "${EXISTING_META}" ]]; then
+        DEPLOYED_MODEL=$(echo "${EXISTING_META}" | jq -r '.spec.deploymentSpec.env[]? | select(.name=="MODEL_NAME") | .value' || true)
+        if [[ "${DEPLOYED_MODEL}" == "${MODEL_NAME}" && "${FORCE_REDEPLOY:-false}" != "true" ]]; then
+            log_info "Reasoning Engine '${SAVED_ENGINE_ID}' já está ativo com o modelo '${MODEL_NAME}' (global)."
             NEED_DEPLOY=false
+            if [[ ! -f "${AGENT_INFO_FILE}" ]]; then
+                echo "${EXISTING_META}" | jq '{
+                    reasoning_engine_name: .name,
+                    engine_id: (.name | split("/") | last),
+                    agent_identity: .spec.effectiveIdentity,
+                    project: "'"${PROJECT_ID}"'",
+                    region: "'"${REGION}"'",
+                    agent_gateway_ingress: .spec.deploymentSpec.agentGatewayConfig.clientToAgentConfig.agentGateway
+                }' > "${AGENT_INFO_FILE}"
+            fi
+        else
+            log_info "Reasoning Engine '${SAVED_ENGINE_ID}' encontrado com modelo '${DEPLOYED_MODEL:-desconhecido}'. Atualizando para '${MODEL_NAME}' (global)..."
+            EXISTING_ENGINE_ARG=(--engine-id="${SAVED_ENGINE_ID}")
         fi
     fi
 fi
 
 if [[ "$NEED_DEPLOY" == "true" ]]; then
-    log_info "Iniciando deploy do agente ADK com ingress governado via Agent Gateway..."
+    log_info "Iniciando deploy/atualização do agente ADK com ingress governado via Agent Gateway..."
     log_info "Gateway Ingress: ${AGW_URI}"
-    log_info "Modelo: ${MODEL_NAME}"
+    log_info "Modelo: ${MODEL_NAME} (Location: global)"
     
     "${PYTHON_EXEC}" "${DEMO_ROOT}/src/deploy_agent.py" \
         --project="${PROJECT_ID}" \
@@ -102,7 +131,8 @@ if [[ "$NEED_DEPLOY" == "true" ]]; then
         --output-json="${AGENT_INFO_FILE}" \
         --enable-agent-identity \
         --enable-telemetry \
-        --allow-token-sharing
+        --allow-token-sharing \
+        "${EXISTING_ENGINE_ARG[@]}"
 
     log_success "Deploy concluído com sucesso!"
 fi
@@ -123,14 +153,24 @@ RE_METADATA=$(curl -s -f -H "Authorization: Bearer ${TOKEN}" \
     -H "x-goog-user-project: ${PROJECT_ID}" \
     "https://${REGION}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${REGION}/reasoningEngines/${RE_ENGINE_ID}")
 
-# Resolve Organization Ancestor for canonical SPIFFE Trust Domain
+# Extract canonical SPIFFE identity directly from Vertex AI effectiveIdentity if present
+EFFECTIVE_ID=$(echo "${RE_METADATA}" | jq -r '.spec.effectiveIdentity // empty' 2>/dev/null || true)
 ORG_ID=$(gcloud projects get-ancestors "${PROJECT_ID}" --filter="type:organization" --format="value(id)" 2>/dev/null || true)
+if [[ -z "${ORG_ID}" && "${EFFECTIVE_ID}" =~ org-([0-9]+) ]]; then
+    ORG_ID="${BASH_REMATCH[1]}"
+fi
 
-if [[ -n "$ORG_ID" ]]; then
+if [[ -n "${EFFECTIVE_ID}" ]]; then
+    AGENT_SPIFFE="principal://${EFFECTIVE_ID}"
+elif [[ -n "$ORG_ID" ]]; then
     AGENT_SPIFFE="principal://agents.global.org-${ORG_ID}.system.id.goog/resources/aiplatform/projects/${PROJECT_NUMBER}/locations/${REGION}/reasoningEngines/${RE_ENGINE_ID}"
-    AGENT_PRINCIPAL_SET="principalSet://agents.global.org-${ORG_ID}.system.id.goog/attribute.platformContainer/aiplatform/projects/${PROJECT_NUMBER}"
 else
     AGENT_SPIFFE="principal://agents.global.project-${PROJECT_NUMBER}.system.id.goog/resources/aiplatform/projects/${PROJECT_NUMBER}/locations/${REGION}/reasoningEngines/${RE_ENGINE_ID}"
+fi
+
+if [[ -n "$ORG_ID" ]]; then
+    AGENT_PRINCIPAL_SET="principalSet://agents.global.org-${ORG_ID}.system.id.goog/attribute.platformContainer/aiplatform/projects/${PROJECT_NUMBER}"
+else
     AGENT_PRINCIPAL_SET="principalSet://agents.global.project-${PROJECT_NUMBER}.system.id.goog/attribute.platformContainer/aiplatform/projects/${PROJECT_NUMBER}"
 fi
 

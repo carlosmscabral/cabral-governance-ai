@@ -1,7 +1,7 @@
 # Governança de Ingress para Agentes de IA com Agent Gateway, Vertex AI Agent Runtime e Model Armor
 
 [![GCP Architecture](https://img.shields.io/badge/Google%20Cloud-Agent%20Platform-blue.svg)](https://cloud.google.com)
-[![Model](https://img.shields.io/badge/Model-Gemini%20Flash%20Latest-green.svg)](https://cloud.google.com/vertex-ai)
+[![Model](https://img.shields.io/badge/Model-Gemini%203.8%20Flash%20(Global)-green.svg)](https://cloud.google.com/vertex-ai)
 [![Visual Docs](https://img.shields.io/badge/Visual%20Docs-Interactive%20Guide-purple.svg)](./VISUAL_GUIDE.md)
 [![Live Demo Guide](https://img.shields.io/badge/Live%20Demo-Presenter%20Playbook-orange.svg)](./DEMO_GUIDE.md)
 [![Zero Residuals](https://img.shields.io/badge/Cleanup-Zero%20Residuals-success.svg)](#desprovisionamento-undeploy)
@@ -11,7 +11,7 @@ Este laboratório implementa uma arquitetura corporativa completa de **Governan�
 - 📖 **[Guia Visual de Arquitetura (VISUAL_GUIDE.md)](./VISUAL_GUIDE.md)**: Diagramas progressivos (C4), sequence walks, wire formats de rede e código anotado.
 - 🎙️ **[Roteiro de Apresentação ao Vivo (DEMO_GUIDE.md)](./DEMO_GUIDE.md)**: Script passo a passo em 4 atos, comandos cURL, navegação no console GCP e FAQ de clientes.
 
-O agente foi desenvolvido utilizando o **Google Agent Development Kit (ADK)** em **Português do Brasil (PT-BR)**, utilizando o modelo `gemini-flash-latest` para interagir com repositórios de dados no Cloud Storage.
+O agente foi desenvolvido utilizando o **Google Agent Development Kit (ADK)** em **Português do Brasil (PT-BR)**, utilizando o modelo `gemini-3.8-flash` (sempre no endpoint `global`) para interagir com repositórios de dados no Cloud Storage.
 
 ---
 
@@ -37,7 +37,7 @@ flowchart TD
     end
 
     subgraph RuntimeLayer["4. Vertex AI Agent Runtime"]
-        RE["🤖 ADK Agent (gemini-flash-latest)\nIdentidade SPIFFE: principal://..."]
+        RE["🤖 ADK Agent (gemini-3.8-flash @ global)\nIdentidade SPIFFE: principal://..."]
     end
 
     subgraph StorageLayer["5. Armazenamento de Dados CRM"]

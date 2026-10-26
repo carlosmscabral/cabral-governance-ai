@@ -12,9 +12,17 @@ if [[ -f "${DEMO_ROOT}/lib/common.sh" ]]; then
     source "${DEMO_ROOT}/lib/common.sh"
 fi
 
-# Detect Project ID
-export PROJECT_ID="${PROJECT_ID:-$(gcloud config get-value project 2>/dev/null)}"
+# Auto-select 'argolis' gcloud configuration if available and not explicitly overridden
+if [[ -z "${CLOUDSDK_ACTIVE_CONFIG_NAME:-}" ]]; then
+    if gcloud config configurations describe argolis &>/dev/null; then
+        export CLOUDSDK_ACTIVE_CONFIG_NAME="argolis"
+    fi
+fi
+
+# Standardize Project ID (default: cabral-governance-ai)
+export PROJECT_ID="${PROJECT_ID:-cabral-governance-ai}"
 export GOOGLE_CLOUD_PROJECT="${PROJECT_ID}"
+export CLOUDSDK_CORE_PROJECT="${PROJECT_ID}"
 if [[ -z "${PROJECT_ID:-}" ]]; then
     if declare -f log_error >/dev/null; then
         log_error "PROJECT_ID não definido e nenhuma configuração ativa do gcloud foi encontrada."
@@ -30,20 +38,20 @@ export PROJECT_NUMBER="${PROJECT_NUMBER:-$(gcloud projects describe "${PROJECT_I
 if [[ -z "${PROJECT_NUMBER:-}" ]]; then
     if declare -f log_error >/dev/null; then
         log_error "Não foi possível obter o PROJECT_NUMBER para o projeto '${PROJECT_ID}'."
-        log_info "Verifique se você possui permissões de 'roles/resourcemanager.projectViewer'."
+        log_info "Verifique se você está autenticado (gcloud config configurations list) e possui 'roles/resourcemanager.projectViewer'."
     else
         echo "❌ [ERRO] Falha ao obter PROJECT_NUMBER para '${PROJECT_ID}'" >&2
     fi
     return 1 2>/dev/null || exit 1
 fi
 
-# Regional & Model Settings
+# Regional & Model Settings (Model Location ALWAYS global)
 export REGION="${REGION:-us-central1}"
-export MODEL_NAME="${MODEL_NAME:-gemini-flash-latest}"
-export MODEL_LOCATION="${MODEL_LOCATION:-global}"
-export GOOGLE_CLOUD_LOCATION="${GOOGLE_CLOUD_LOCATION:-global}"
-export VERTEX_AI_LOCATION="${VERTEX_AI_LOCATION:-global}"
-export AGENT_LOCATION="${AGENT_LOCATION:-global}"
+export MODEL_NAME="${MODEL_NAME:-gemini-3.8-flash}"
+export MODEL_LOCATION="global"
+export GOOGLE_CLOUD_LOCATION="global"
+export VERTEX_AI_LOCATION="global"
+export AGENT_LOCATION="global"
 
 # Resource Naming Slugs (PREFIX is used to namespace all provisioned resources)
 export PREFIX="${PREFIX:-agw-modar}"

@@ -20,8 +20,9 @@ def main():
     parser.add_argument("--agent-location", default=os.getenv("AGENT_LOCATION", "global"), help="Vertex AI Agent Location")
     parser.add_argument("--staging-bucket", default=os.getenv("STAGING_BUCKET"), help="GCS Staging Bucket")
     parser.add_argument("--data-bucket", default=os.getenv("DATA_BUCKET"), help="GCS Customer Data Bucket")
-    parser.add_argument("--model-name", default=os.getenv("MODEL_NAME", "gemini-flash-latest"), help="Gemini Model Name")
+    parser.add_argument("--model-name", default=os.getenv("MODEL_NAME", "gemini-3.8-flash"), help="Gemini Model Name")
     parser.add_argument("--agent-gateway-ingress", default=os.getenv("AGW_URI"), help="Agent Gateway Resource URI")
+    parser.add_argument("--engine-id", default=None, help="Existing Reasoning Engine ID to update in-place")
     parser.add_argument("--enable-agent-identity", action="store_true", default=True, help="Enable SPIFFE Agent Identity")
     parser.add_argument("--enable-telemetry", action="store_true", default=True, help="Enable OpenTelemetry")
     parser.add_argument("--allow-token-sharing", action="store_true", default=True, help="Allow token sharing for GCP services")
@@ -33,11 +34,35 @@ def main():
     args = parser.parse_args()
 
     print(f"🚀 Initializing Vertex AI client for project '{args.project}' in region '{args.region}'...")
+    import subprocess
+    import google.oauth2.credentials
     import vertexai
     from vertexai.preview import reasoning_engines
 
-    vertexai.init(project=args.project, location=args.region, staging_bucket=f"gs://{args.staging_bucket}")
-    client = vertexai.Client(project=args.project, location=args.region)
+    creds = None
+    try:
+        token = subprocess.run(
+            ["gcloud", "auth", "print-access-token"],
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout.strip()
+        if token:
+            creds = google.oauth2.credentials.Credentials(token=token)
+    except Exception:
+        pass
+
+    vertexai.init(
+        project=args.project,
+        location=args.region,
+        staging_bucket=f"gs://{args.staging_bucket}",
+        credentials=creds,
+    )
+    client = vertexai.Client(
+        project=args.project,
+        location=args.region,
+        credentials=creds,
+    )
 
     # Set environment variables for local agent load
     if args.data_bucket:
@@ -59,7 +84,7 @@ def main():
     os.environ["GOOGLE_CLOUD_PROJECT"] = args.project
     os.environ["PROJECT_ID"] = args.project
     os.environ["DATA_BUCKET"] = args.data_bucket or ""
-    os.environ["MODEL_NAME"] = args.model_name or "gemini-flash-latest"
+    os.environ["MODEL_NAME"] = args.model_name or "gemini-3.8-flash"
     os.environ["MODEL_LOCATION"] = "global"
     os.environ["GOOGLE_CLOUD_LOCATION"] = "global"
     os.environ["VERTEX_AI_LOCATION"] = "global"
@@ -126,7 +151,7 @@ def main():
                 "VERTEX_AI_LOCATION": "global",
                 "MODEL_LOCATION": "global",
                 "DATA_BUCKET": args.data_bucket or "",
-                "MODEL_NAME": args.model_name or "gemini-flash-latest",
+                "MODEL_NAME": args.model_name or "gemini-3.8-flash",
             },
         }
 
@@ -147,10 +172,34 @@ def main():
                 }
             }
 
-        print(f"📦 Deploying agent '{args.display_name}' to Vertex AI Reasoning Engines...")
-        print(f"🔗 Agent Gateway Ingress bound to: {args.agent_gateway_ingress}")
-
-        engine = client.agent_engines.create(agent=app, config=deploy_config)
+        if args.engine_id:
+            engine_resource_name = f"projects/{args.project}/locations/{args.region}/reasoningEngines/{args.engine_id}"
+            print(f"🔄 Updating existing Reasoning Engine '{engine_resource_name}' with model '{args.model_name}' (location=global)...")
+            update_config = {
+                "display_name": args.display_name,
+                "description": args.description,
+                "staging_bucket": f"gs://{args.staging_bucket}",
+                "requirements": requirements,
+                "extra_packages": deploy_config["extra_packages"],
+                "env_vars": deploy_config["env_vars"],
+            }
+            try:
+                engine = client.agent_engines.update(
+                    name=engine_resource_name,
+                    agent=app,
+                    config=update_config,
+                )
+            except Exception as exc:
+                print(f"⚠️ In-place update failed ({exc}); recreating Reasoning Engine...")
+                try:
+                    client.agent_engines.delete(name=engine_resource_name, force=True)
+                except Exception:
+                    pass
+                engine = client.agent_engines.create(agent=app, config=deploy_config)
+        else:
+            print(f"📦 Deploying agent '{args.display_name}' to Vertex AI Reasoning Engines...")
+            print(f"🔗 Agent Gateway Ingress bound to: {args.agent_gateway_ingress}")
+            engine = client.agent_engines.create(agent=app, config=deploy_config)
 
     finally:
         os.chdir(original_cwd)

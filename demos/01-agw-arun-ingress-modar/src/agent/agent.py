@@ -5,10 +5,10 @@ from google.adk.agents import LlmAgent
 from google.adk.models.google_llm import Gemini
 from google.cloud import storage
 
-# Configuração de Ambiente e Model Location (Global)
+# Configuração de Ambiente e Model Location (Sempre Global)
 data_bucket = os.getenv("DATA_BUCKET", "")
-model_name = os.getenv("MODEL_NAME", "gemini-flash-latest")
-model_location = os.getenv("MODEL_LOCATION", "global")
+model_name = os.getenv("MODEL_NAME", "gemini-3.8-flash")
+model_location = "global"
 project_id = os.getenv("PROJECT_ID", os.getenv("GOOGLE_CLOUD_PROJECT", ""))
 
 client_kwargs = {
