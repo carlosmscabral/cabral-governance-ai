@@ -35,19 +35,19 @@ cabral-governance-ai/
 │       └── static/             # Zero-build split-view frontend (HTML/CSS/JS)
 │
 └── demos/                      # Individual governance demos
-    ├── 01-agw-arun-ingress-modar/
-    │   ├── README.md           # Scenario documentation & walkthrough
-    │   ├── VISUAL_GUIDE.md     # Progressive C4 diagrams, sequence walks & wire formats
-    │   ├── DEMO_GUIDE.md       # Live customer presentation script (4 acts) & FAQ
-    │   ├── scenarios.json      # Playbook manifest for Agent Console & Wire Inspector
-    │   ├── env.sh              # Standard environment (cabral-governance-ai + gemini-3.8-flash @ global)
-    │   ├── deploy.sh           # Idempotent deployment script
-    │   ├── test.sh             # Automated PT-BR end-to-end test suite
-    │   ├── undeploy.sh         # Zero-residuals teardown script
-    │   ├── cfg/                # Gateway, Service Extension & Authz Policy templates
-    │   ├── scripts/            # Modular provisioning steps (01..05)
-    │   └── src/                # ADK agent source code and CRM datasets
-    └── ...
+    ├── 01-agw-arun-ingress-modar/  # Agent Gateway Ingress + Model Armor + Cloud DLP
+    └── 02-agw-arun-egress-mcp/     # Agent Gateway to Anywhere (Egress) + Agent Registry + IAP CEL MCP
+        ├── README.md           # Scenario documentation & walkthrough
+        ├── VISUAL_GUIDE.md     # Progressive C4 diagrams, sequence walks & wire formats
+        ├── DEMO_GUIDE.md       # Live customer presentation script (4 acts) & FAQ
+        ├── scenarios.json      # Playbook manifest for Agent Console & Wire Inspector
+        ├── env.sh              # Standard environment (cabral-governance-ai + gemini-3.8-flash @ global)
+        ├── deploy.sh           # Idempotent deployment script
+        ├── test.sh             # Automated PT-BR end-to-end test suite
+        ├── undeploy.sh         # Zero-residuals teardown script
+        ├── cfg/                # Gateway, Service Extension, Authz Policy & IAP CEL templates
+        ├── scripts/            # Modular provisioning steps (01..05)
+        └── src/                # ADK agent + Streamable HTTP FastMCP server (Cloud Run)
 ```
 
 ---
@@ -115,7 +115,7 @@ Key capabilities:
 | Demo | Focus Area | Status | Description |
 | :--- | :--- | :--- | :--- |
 | [`01-agw-arun-ingress-modar`](demos/01-agw-arun-ingress-modar) | *Ingress Governance & Guardrails* | 🟢 Ready | Agent Gateway Ingress (`CLIENT_TO_AGENT`) com Vertex AI Reasoning Engine, Model Armor e Cloud DLP para mitigação de prompt injection e redação de PII/SSN. |
-| *02-agw-arun-egress-sgp* | *Egress Governance & Semantic Policies* | 📋 Planned | Agent Gateway Egress (`AGENT_TO_ANYWHERE`) com Semantic Governance Policies (SGP), Agent Registry e controle granular de chamadas MCP. |
+| [`02-agw-arun-egress-mcp`](demos/02-agw-arun-egress-mcp) | *Egress Governance & Zero-Trust MCP* | 🟢 Ready | Agent Gateway to Anywhere (`AGENT_TO_ANYWHERE`) sem VPC/PSC-I, com Agent Registry, identidade SPIFFE + OIDC no Cloud Run e IAP CEL L7 (`isReadOnly == true`) bloqueando tools MCP destrutivas e exfiltração para domínios não registrados. |
 | *03-agent-observability-trace* | *Observability & Auditability* | 📋 Planned | Cloud Trace, BigQuery Agent Analytics, telemetria OpenTelemetry e auditoria de decisões de sanitização. |
 
 

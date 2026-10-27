@@ -1,0 +1,17 @@
+{
+  "bindings": [
+    {
+      "role": "roles/iap.egressor",
+      "members": [
+        "${AGENT_SPIFFE}"
+      ],
+      "condition": {
+        "title": "Permitir apenas tools MCP readOnly e handshake de sessao para ${RE_DISPLAY_NAME}",
+        "description": "Bloqueia tools mutaveis ou destrutivas (isReadOnly == false) na borda L7 do Agent Gateway antes de atingir o servidor MCP.",
+        "expression": "api.getAttribute('iap.googleapis.com/mcp.tool.isReadOnly', false) == true || api.getAttribute('iap.googleapis.com/mcp.toolName', '') == ''"
+      }
+    }
+  ],
+  "etag": "${IAP_ETAG}",
+  "version": 3
+}

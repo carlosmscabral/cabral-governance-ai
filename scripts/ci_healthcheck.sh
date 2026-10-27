@@ -74,18 +74,24 @@ for demo_dir in "${REPO_ROOT}/demos/"*; do
         cd "${demo_dir}"
         if [[ "${UPGRADE_SDK}" == "true" && -d ".venv" ]]; then
             echo "📦 [SDK UPGRADE] Atualizando pacotes Python em ${demo_name}/.venv..."
+            EXTRA_PKGS=()
+            if [[ -f "src/pyproject.toml" ]] && grep -q '"mcp' "src/pyproject.toml"; then
+                EXTRA_PKGS+=("mcp>=1.26.0,<2.0.0" "google-auth>=2.28.0" "httpx>=0.27.0")
+            fi
             if command -v uv &>/dev/null; then
                 uv pip install --upgrade --python ".venv/bin/python" \
                     "google-cloud-aiplatform[adk,agent_engines]>=1.80.0" \
                     "google-cloud-storage>=2.14.0" \
                     "pydantic>=2.0.0" \
-                    "cloudpickle>=3.0.0"
+                    "cloudpickle>=3.0.0" \
+                    "${EXTRA_PKGS[@]}"
             else
                 ".venv/bin/pip" install --upgrade \
                     "google-cloud-aiplatform[adk,agent_engines]>=1.80.0" \
                     "google-cloud-storage>=2.14.0" \
                     "pydantic>=2.0.0" \
-                    "cloudpickle>=3.0.0"
+                    "cloudpickle>=3.0.0" \
+                    "${EXTRA_PKGS[@]}"
             fi
         fi
 

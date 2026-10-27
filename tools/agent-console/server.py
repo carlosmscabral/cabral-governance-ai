@@ -307,7 +307,10 @@ def discover_demos() -> list[dict[str, Any]]:
                 "engine_id": engine_id,
                 "reasoning_engine_name": re_name,
                 "agent_gateway_ingress": agent_info.get("agent_gateway_ingress")
+                or agent_info.get("agent_gateway_egress")
                 or env_defaults.get("AGW_URI", ""),
+                "agent_gateway_egress": agent_info.get("agent_gateway_egress", ""),
+                "mcp_url": agent_info.get("mcp_url", ""),
                 "default_profile": scenarios_meta.get("default_profile", "vertex_stream_query"),
                 "default_user_id": scenarios_meta.get("default_user_id", "cliente-demo"),
                 "personas": scenarios_meta.get(
@@ -508,6 +511,53 @@ def detect_governance_verdict(
             "leak_warning": None,
         }
 
+    # 3. Agent Gateway Egress (AGENT_TO_ANYWHERE) — L7 MCP Tool Block or Anti-Exfiltration Block
+    blocked_tools: list[str] = []
+    has_mcp_l7_block = False
+    has_egress_exfil_block = False
+
+    for tr in tool_responses or []:
+        tr_name = str(tr.get("name") or "")
+        tr_blob = json.dumps(tr, ensure_ascii=False)
+        is_mcp_err = (
+            ("MCP tool execution" in tr_blob or "MCP session" in tr_blob)
+            and ("403" in tr_blob or "Forbidden" in tr_blob)
+        )
+        is_exfil_err = (
+            "Egress request is not authorized" in tr_blob
+            or "BLOQUEADO PELO AGENT GATEWAY EGRESS" in tr_blob
+            or "BLOQUEADO NA SAÍDA PELO AGENT GATEWAY" in tr_blob
+            or "CONEXÃO EXTERNA BLOQUEADA PELO PERÍMETRO DE EGRESS" in tr_blob
+        )
+        if is_mcp_err or is_exfil_err:
+            if tr_name and tr_name not in blocked_tools:
+                blocked_tools.append(tr_name)
+            if is_mcp_err:
+                has_mcp_l7_block = True
+            if is_exfil_err:
+                has_egress_exfil_block = True
+
+    if (
+        has_mcp_l7_block
+        or has_egress_exfil_block
+        or "Egress request is not authorized" in combined
+        or "BLOQUEADO PELO AGENT GATEWAY EGRESS" in combined
+        or "BLOQUEADO NA SAÍDA PELO AGENT GATEWAY" in combined
+    ):
+        return {
+            "code": "AGW_EGRESS_MCP_BLOCK" if has_mcp_l7_block else "AGW_EGRESS_EXFIL_BLOCK",
+            "stage": "EGRESS_GATEWAY",
+            "egress_status_code": 403,
+            "blocked_tools": blocked_tools,
+            "label": (
+                "🛑 BLOQUEADO NO EGRESS L7 (Agent Gateway + IAP — Tool MCP 403)"
+                if has_mcp_l7_block
+                else "🛑 BLOQUEADO NO EGRESS ZERO-TRUST (Agent Gateway — Exfiltração 403)"
+            ),
+            "severity": "danger",
+            "leak_warning": None,
+        }
+
     if status_code >= 400 or '"error_code"' in raw_body or '"error_message"' in raw_body:
         label_code = f"HTTP {status_code}" if status_code >= 400 else "SSE STREAM ERROR"
         return {
@@ -548,8 +598,16 @@ def detect_governance_verdict(
 app = FastAPI(
     title="Agent Console & Wire Inspector",
     description="Lightweight Postman + Chat simulator for Agent Platform Governance Demos",
-    version="0.3.0",
+    version="0.4.0",
 )
+
+
+@app.middleware("http")
+async def disable_static_cache(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path in ("/", "/index.html", "/app.js", "/styles.css"):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    return response
 
 
 @app.exception_handler(Exception)
@@ -1176,4 +1234,11 @@ if __name__ == "__main__":
     print(f"🚀 Agent Console & Wire Inspector iniciado em http://{args.host}:{args.port}")
     print(f"🕒 Horário local: {now_brt_short()}")
     print("=" * 72)
-    uvicorn.run("server:app", host=args.host, port=args.port, reload=args.reload, app_dir=str(HERE))
+    uvicorn.run(
+        "server:app",
+        host=args.host,
+        port=args.port,
+        reload=args.reload,
+        reload_dirs=[str(HERE)] if args.reload else None,
+        app_dir=str(HERE),
+    )

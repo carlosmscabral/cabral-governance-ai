@@ -484,6 +484,15 @@ textarea:focus {
   box-shadow: 0 0 0 1px var(--accent-blue);
 }
 
+.turn-card.turn-blocked {
+  border-left: 3px solid var(--accent-red);
+}
+
+.turn-card.turn-blocked.selected {
+  border-color: var(--accent-red);
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.55);
+}
+
 .turn-meta-top {
   display: flex;
   align-items: center;
@@ -516,9 +525,9 @@ textarea:focus {
 }
 
 .turn-agent-bubble.blocked {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  color: #fecaca;
+  background: rgba(239, 68, 68, 0.09);
+  border: 1px solid rgba(239, 68, 68, 0.42);
+  color: #fee2e2;
 }
 
 .turn-footer-badges {
@@ -964,6 +973,15 @@ textarea:focus {
   color: var(--accent-blue);
   font-weight: 700;
   margin-bottom: 0.25rem;
+}
+
+.tool-card.blocked {
+  background: rgba(239, 68, 68, 0.09);
+  border-color: rgba(239, 68, 68, 0.48);
+}
+
+.tool-card.blocked .tool-card-header {
+  color: #fca5a5;
 }
 
 /* SSE Chunks Timeline */

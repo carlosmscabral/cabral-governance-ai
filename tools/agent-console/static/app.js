@@ -179,7 +179,26 @@ function selectDemo(demoId) {
     });
 
     if (found.engine_id) {
-      els.engineBadge.textContent = `Engine: ${found.engine_id}`;
+      const agwEgress = found.agent_gateway_egress
+        ? found.agent_gateway_egress.split("/").pop()
+        : "";
+      const agwIngress =
+        found.agent_gateway_ingress && found.agent_gateway_ingress !== found.agent_gateway_egress
+          ? found.agent_gateway_ingress.split("/").pop()
+          : "";
+      const agwSuffix = agwEgress
+        ? ` • Egress: ${agwEgress}`
+        : agwIngress
+        ? ` • Ingress: ${agwIngress}`
+        : "";
+      els.engineBadge.textContent = `Engine: ${found.engine_id}${agwSuffix}`;
+      els.engineBadge.title = [
+        `Reasoning Engine: ${found.reasoning_engine_name || found.engine_id}`,
+        found.agent_gateway_egress ? `Agent Gateway Egress: ${found.agent_gateway_egress}` : "",
+        found.mcp_url ? `MCP Backend: ${found.mcp_url}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n");
       els.engineBadge.style.opacity = "1";
     } else {
       els.engineBadge.textContent = "Engine: Não deployado";
@@ -570,6 +589,30 @@ function renderTurnCard(turn) {
   els.chatFeed.scrollTop = els.chatFeed.scrollHeight;
 }
 
+function isToolResponseBlocked(tr) {
+  if (!tr) return false;
+  const blob = JSON.stringify(tr);
+  return (
+    blob.includes("403 Forbidden") ||
+    blob.includes("Egress request is not authorized") ||
+    blob.includes("BLOQUEADO PELO AGENT GATEWAY") ||
+    blob.includes("BLOQUEADO NA SAÍDA PELO AGENT GATEWAY") ||
+    blob.includes("CONEXÃO EXTERNA BLOQUEADA PELO PERÍMETRO DE EGRESS") ||
+    (blob.includes("MCP tool execution") && (blob.includes("403") || blob.includes("Forbidden")))
+  );
+}
+
+function getBlockedToolNames(turn) {
+  const names = new Set(turn.complete?.governance_verdict?.blocked_tools || []);
+  const resps = turn.complete?.tool_responses || turn.liveToolResponses || [];
+  resps.forEach((tr) => {
+    if (isToolResponseBlocked(tr) && tr.name) {
+      names.add(tr.name);
+    }
+  });
+  return names;
+}
+
 function updateTurnDOM(turn) {
   const card = document.getElementById(turn.id);
   if (!card) return;
@@ -579,8 +622,16 @@ function updateTurnDOM(turn) {
 
   const timeLabel = turn.request?.timestamp_brt || "enviando...";
   const activeTools = turn.complete?.tool_calls || turn.liveToolCalls || [];
-  const verdictCode = turn.complete?.governance_verdict?.code || "";
-  const isBlocked = verdictCode.includes("BLOCK") || (turn.complete?.status_code >= 400);
+  const blockedTools = getBlockedToolNames(turn);
+  const verdict = turn.complete?.governance_verdict || null;
+  const verdictCode = verdict?.code || "";
+  const isEgressBlock = verdict?.stage === "EGRESS_GATEWAY" || blockedTools.size > 0;
+  const isBlocked =
+    verdictCode.includes("BLOCK") ||
+    isEgressBlock ||
+    turn.complete?.status_code >= 400;
+
+  card.classList.toggle("turn-blocked", isBlocked);
 
   let agentDisplay = turn.accumulatedText;
   if (!agentDisplay) {
@@ -604,14 +655,23 @@ function updateTurnDOM(turn) {
   }
 
   const badges = [];
-  if (turn.complete?.governance_verdict) {
-    const v = turn.complete.governance_verdict;
-    badges.push(`<span class="pill-badge ${escapeHtml(v.severity)}">${escapeHtml(v.label)}</span>`);
+  if (verdict) {
+    badges.push(`<span class="pill-badge ${escapeHtml(verdict.severity)}">${escapeHtml(verdict.label)}</span>`);
+  } else if (turn.status === "streaming" && blockedTools.size > 0) {
+    badges.push(`<span class="pill-badge danger">🛑 BLOQUEADO NO EGRESS (403 Forbidden)</span>`);
   }
+
   const statusCode = turn.complete?.status_code || turn.responseStart?.status_code;
   if (statusCode) {
-    const cls = statusCode >= 400 ? "danger" : "neutral";
-    badges.push(`<span class="pill-badge ${cls}">HTTP ${statusCode}</span>`);
+    if (statusCode < 400 && isEgressBlock) {
+      const egressCode = verdict?.egress_status_code || 403;
+      badges.push(
+        `<span class="pill-badge warning" title="O stream SSE cliente→agente permaneceu aberto (HTTP ${statusCode}), enquanto a chamada de saída (Egress) do agente foi bloqueada pelo Agent Gateway (HTTP ${egressCode})">SSE ${statusCode} • Egress ${egressCode}</span>`
+      );
+    } else {
+      const cls = statusCode >= 400 ? "danger" : "neutral";
+      badges.push(`<span class="pill-badge ${cls}">HTTP ${statusCode}</span>`);
+    }
   }
   if (turn.sessionId) {
     badges.push(`<span class="pill-badge neutral">sess=${escapeHtml(turn.sessionId)}</span>`);
@@ -622,7 +682,12 @@ function updateTurnDOM(turn) {
     );
   }
   activeTools.forEach((tc) => {
-    badges.push(`<span class="pill-badge tool">🔧 tool: ${escapeHtml(tc.name || "functionCall")}</span>`);
+    const tName = tc.name || "functionCall";
+    if (blockedTools.has(tName)) {
+      badges.push(`<span class="pill-badge danger">🛑 tool bloqueada (403): ${escapeHtml(tName)}</span>`);
+    } else {
+      badges.push(`<span class="pill-badge tool">🔧 tool: ${escapeHtml(tName)}</span>`);
+    }
   });
 
   card.innerHTML = `
@@ -657,8 +722,16 @@ function renderInspector(turn) {
 
   const statusCode = turn.complete?.status_code || turn.responseStart?.status_code || "...";
   const reason = turn.complete?.reason_phrase || turn.responseStart?.reason_phrase || "";
-  els.metricStatusBadge.textContent = `${statusCode} ${reason}`.trim();
-  els.metricStatusBadge.classList.toggle("err", Number(statusCode) >= 400);
+  const blockedTools = getBlockedToolNames(turn);
+  const v = turn.complete?.governance_verdict;
+  const isEgressBlock = v?.stage === "EGRESS_GATEWAY" || blockedTools.size > 0;
+  if (Number(statusCode) < 400 && isEgressBlock) {
+    els.metricStatusBadge.textContent = `SSE ${statusCode} • Egress 403`;
+    els.metricStatusBadge.classList.add("err");
+  } else {
+    els.metricStatusBadge.textContent = `${statusCode} ${reason}`.trim();
+    els.metricStatusBadge.classList.toggle("err", Number(statusCode) >= 400);
+  }
 
   const ttft = turn.complete?.ttft_ms ?? turn.responseStart?.ttft_ms ?? "--";
   const total = turn.complete?.total_ms ?? "...";
@@ -668,7 +741,6 @@ function renderInspector(turn) {
   els.tabChunkCounter.textContent = String(turn.chunks.length);
 
   // Governance Verdict & Audit Leak Warning Banners
-  const v = turn.complete?.governance_verdict;
   if (v) {
     els.verdictBanner.className = `verdict-banner ${v.severity}`;
     els.verdictBanner.textContent = v.label;
@@ -711,17 +783,20 @@ function renderInspector(turn) {
     els.toolCallsSection.classList.remove("hidden");
     const itemsHtml = [];
     tCalls.forEach((tc) => {
+      const tName = tc.name || "unknown";
+      const wasBlocked = blockedTools.has(tName);
       itemsHtml.push(`
-        <div class="tool-card">
-          <div class="tool-card-header">➡️ functionCall: ${escapeHtml(tc.name || "unknown")}</div>
+        <div class="tool-card ${wasBlocked ? "blocked" : ""}">
+          <div class="tool-card-header">${wasBlocked ? "🛑" : "➡️"} functionCall: ${escapeHtml(tName)}${wasBlocked ? " (BLOQUEADA NO EGRESS)" : ""}</div>
           <pre>${escapeHtml(JSON.stringify(tc.args || tc, null, 2))}</pre>
         </div>
       `);
     });
     tResps.forEach((tr) => {
+      const trBlocked = isToolResponseBlocked(tr);
       itemsHtml.push(`
-        <div class="tool-card">
-          <div class="tool-card-header">⬅️ functionResponse: ${escapeHtml(tr.name || "unknown")}</div>
+        <div class="tool-card ${trBlocked ? "blocked" : ""}">
+          <div class="tool-card-header">${trBlocked ? "🛑 functionResponse (403 EGRESS BLOCKED)" : "⬅️ functionResponse"}: ${escapeHtml(tr.name || "unknown")}</div>
           <pre>${escapeHtml(JSON.stringify(tr.response || tr, null, 2))}</pre>
         </div>
       `);
@@ -739,7 +814,9 @@ function renderInspector(turn) {
       .map((c) => {
         const pretty = c.parsed_json ? JSON.stringify(c.parsed_json, null, 2) : c.raw_line;
         const deltas = [];
-        const isErrChunk = Boolean(c.error_info);
+        const hasBlockedToolResp =
+          Array.isArray(c.tool_responses) && c.tool_responses.some((tr) => isToolResponseBlocked(tr));
+        const isErrChunk = Boolean(c.error_info) || hasBlockedToolResp;
         if (c.extracted_text) {
           deltas.push(`${isErrChunk ? "🛑" : "💬"} ${escapeHtml(c.extracted_text)}`);
         }
@@ -749,7 +826,11 @@ function renderInspector(turn) {
           );
         }
         if (Array.isArray(c.tool_responses) && c.tool_responses.length > 0) {
-          deltas.push(`📦 function_response: ${escapeHtml(c.tool_responses.map((t) => t.name).join(", "))}`);
+          deltas.push(
+            `${hasBlockedToolResp ? "🛑 function_response (403 BLOCKED)" : "📦 function_response"}: ${escapeHtml(
+              c.tool_responses.map((t) => t.name).join(", ")
+            )}`
+          );
         }
         const deltaHtml =
           deltas.length > 0

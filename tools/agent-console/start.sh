@@ -21,20 +21,25 @@ if [[ -z "${CLOUDSDK_ACTIVE_CONFIG_NAME:-}" ]]; then
     fi
 fi
 
+RELOAD_ARGS=()
+if [[ "${AGENT_CONSOLE_NO_RELOAD:-0}" != "1" ]]; then
+    RELOAD_ARGS=(--reload)
+fi
+
 # 1. Check if a local venv in tools/agent-console or demos/01-* already has fastapi+uvicorn+httpx
 for candidate_py in \
     "${TOOL_DIR}/.venv/bin/python" \
     "${REPO_ROOT}/demos/01-agw-arun-ingress-modar/.venv/bin/python"; do
     if [[ -x "${candidate_py}" ]]; then
         if "${candidate_py}" -c "import fastapi, uvicorn, httpx" &>/dev/null; then
-            exec "${candidate_py}" "${TOOL_DIR}/server.py" --host "${HOST}" --port "${PORT}" "$@"
+            exec "${candidate_py}" "${TOOL_DIR}/server.py" --host "${HOST}" --port "${PORT}" "${RELOAD_ARGS[@]}" "$@"
         fi
     fi
 done
 
 # 2. Fallback to `uv run` (uses PEP 723 inline dependencies in server.py)
 if command -v uv &>/dev/null; then
-    exec uv run "${TOOL_DIR}/server.py" --host "${HOST}" --port "${PORT}" "$@"
+    exec uv run "${TOOL_DIR}/server.py" --host "${HOST}" --port "${PORT}" "${RELOAD_ARGS[@]}" "$@"
 fi
 
 echo "❌ [ERRO] Não foi encontrado ambiente Python com fastapi/uvicorn/httpx nem o binário 'uv'." >&2

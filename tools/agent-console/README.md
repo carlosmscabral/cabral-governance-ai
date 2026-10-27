@@ -54,7 +54,7 @@ Clique em qualquer turno do chat para inspecionar as 4 abas do **Wire Inspector*
 - **Request (`OUT`)**: método, URL exata, cabeçalhos enviados (com Bearer Token mascarado) e JSON body formatado.
 - **Response (`IN`)**:
   - Status HTTP, latência **TTFT (ms)** e **Total (ms)**.
-  - **Banner de Veredito de Governança**: diferencia claramente **`ALLOW`**, **`CLOUD DLP REDACT`** (`[US_SOCIAL_SECURITY_NUMBER]`), **`MODEL ARMOR INGRESS BLOCK`** e **`MODEL ARMOR EGRESS BLOCK`**.
+  - **Banner de Veredito de Governança**: diferencia claramente **`ALLOW`**, **`CLOUD DLP REDACT`** (`[US_SOCIAL_SECURITY_NUMBER]`), **`MODEL ARMOR INGRESS BLOCK`**, **`MODEL ARMOR EGRESS BLOCK`**, **`AGW EGRESS L7 MCP BLOCK`** (ferramenta MCP barrada na Camada 7 via IAP CEL) e **`AGW EGRESS ZERO-TRUST BLOCK`** (anti-exfiltração *default-deny* para destinos fora do Agent Registry).
   - **Visibilidade de Tool Calls (`function_call` / `function_response`)**: o endpoint `:streamQuery?alt=sse` transmite cada `google.adk.events.Event` gerado pelo `Runner.run_async()` do ADK (incluindo chamadas de ferramentas e seus retornos brutos).
   - **Alerta de Segurança em Streaming (Audit Leak Warning)**: quando um guardrail de saída (`SANITIZE_MODEL_RESPONSE`) bloqueia apenas o último chunk textual do LLM com `403`, mas os chunks anteriores de `function_response` já trafegaram no stream SSE com dados brutos do bucket, o console exibe um alerta explícito explicando por que um BFF de produção deve filtrar eventos internos ou aplicar DLP na camada da tool.
 - **SSE Timeline (`CHUNKS`)**: lista cronológica de cada frame SSE recebido com delta de tempo (`+ms`), badges de delta (`💬 texto`, `🔧 function_call`, `📦 function_response`, `🛑 erro`) e JSON formatado.

@@ -1,0 +1,13 @@
+{
+  "bindings": [
+    {
+      "role": "roles/iap.egressor",
+      "members": [
+        "${AGENT_SPIFFE}",
+        "${AGENT_PRINCIPAL_SET}"
+      ]
+    }
+  ],
+  "etag": "${IAP_ETAG}",
+  "version": 3
+}
