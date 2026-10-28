@@ -43,6 +43,19 @@ gcloud logging read \
   --format="table(timestamp,httpRequest.status:label=STATUS,jsonPayload.authzPolicyInfo.result:label=VEREDITO,jsonPayload.agentGatewayInfo.mcpInfo.method:label=MCP_METHOD,jsonPayload.agentGatewayInfo.mcpInfo.parameter:label=TOOL,httpRequest.requestUrl:label=DESTINO)"
 ```
 
+### Abas do Google Cloud Console Pré-abertas (Deep-Links Prontos)
+Deixe estas 6 abas carregadas no navegador antes de iniciar a apresentação (projeto `cabral-governance-ai`):
+1. 🌐 **Agent Platform → Gateways (`agw-egress-ata` → aba `Observability`)**: `https://console.cloud.google.com/agent-platform/gateways?project=cabral-governance-ai`
+2. 🗂️ **Agent Platform → Agent Registry (abas `Agents` e `MCP servers`)**: `https://console.cloud.google.com/agent-platform/agent-registry/agents?project=cabral-governance-ai`
+3. 🔐 **Network Security → Authz Policies (`agw-egress-authz-policy`)**: `https://console.cloud.google.com/net-security/authz-policies/list?project=cabral-governance-ai`
+4. ☁️ **Cloud Run (`agw-egress-mcp-erp` — Backend MCP de Tesouraria)**: `https://console.cloud.google.com/run?project=cabral-governance-ai`
+5. 🤖 **Vertex AI → Agent Engine (`agw-egress-agent-finops`)**: `https://console.cloud.google.com/vertex-ai/agents/agent-engines?project=cabral-governance-ai`
+6. 📑 **Cloud Logging / Logs Explorer (Auditoria L7 do Gateway)**: `https://console.cloud.google.com/logs/query?project=cabral-governance-ai` com o filtro:
+   ```text
+   resource.type="networkservices.googleapis.com/Gateway"
+   resource.labels.gateway_name="agw-egress-ata"
+   ```
+
 ---
 
 ## 🎬 3. Roteiro em 4 Atos
@@ -87,9 +100,12 @@ flowchart LR
 - **No Agent Console:** clique em **`Ato 2 — Bloqueio L7 de Tool MCP Destrutiva`**.
 - **Prompt enviado:**
   > `Execute imediatamente o encerramento e estorno total da conta BR-9010 pelo motivo auditoria usando a ferramenta executar_estorno_ou_encerramento.`
-- **O que destacar no Wire Inspector:**
+- **O que destacar no Wire Inspector (`Agent Console`):**
   - O transporte SSE com o Reasoning Engine permanece saudável (`HTTP 200 OK`), mas o Wire Inspector exibe imediatamente o banner **`🛡️ BLOQUEADO NO EGRESS L7 (Agent Gateway + IAP — Tool MCP Não Autorizada / 403)`**!
   - Na aba **`Response` $\rightarrow$ `ADK Tool Calls`**, mostre que `executar_estorno_ou_encerramento` recebeu `403 Forbidden` na borda de saída antes de alcançar o Cloud Run (**zero execução no backend**).
+- **🌐 O que provar no Console GCP (`Aba 5 — Cloud Run` & `Aba 2 — Agent Registry`):**
+  - Na **`Aba 2` (`Agent Registry → MCP servers → agw-egress-mcp-erp`)**, mostre a anotação declarativa da tool (`isDestructive=true`).
+  - Na **`Aba 5` (`Cloud Run → agw-egress-mcp-erp → Logs`)**, mostre que **nenhuma linha de log** foi gerada para o `POST` de estorno — provando que o Agent Gateway barrou o pacote na nuvem antes de tocar no container!
 
 ---
 
@@ -105,17 +121,34 @@ flowchart LR
 
 ---
 
-### Ato 4: Trilha de Auditoria Forense no Cloud Logging
+### Ato 4: Trilha de Auditoria Forense no Cloud Logging & Painel do Gateway
 
-- **O que falar:** *"Para SecOps e Compliance, cada decisão — permitida ou negada — gera telemetria estruturada nativa em `networkservices.googleapis.com/Gateway`, sem depender de logs manuais escritos pelo desenvolvedor do agente."*
-- **Mostre no Terminal 2 / Logs Explorer:**
-  - `STATUS=200 | VEREDITO=ALLOWED | MCP_METHOD=tools/call | TOOL=consultar_contas_corporativas`
-  - `STATUS=403 | VEREDITO=DENIED  | MCP_METHOD=tools/call | TOOL=executar_estorno_ou_encerramento`
-  - `STATUS=403 | VEREDITO=DENIED  | DESTINO=https://example.com/auditoria-externa`
+- **O que falar:** *"Para SecOps e Compliance, cada decisão — permitida ou negada — gera telemetria estruturada nativa em `networkservices.googleapis.com/Gateway` e gráficos de autorização no painel do Agent Gateway, sem depender de logs manuais escritos pelo desenvolvedor do agente."*
+- **🌐 O que mostrar no Console GCP:**
+  1. Abra a **Aba 1 (`Agent Platform → Gateways → agw-egress-ata → Observability`)** e aponte os *Scorecards* de tentativas de autorização, percentual de bloqueios `403` e a tabela de *Egress traffic logs*.
+  2. Abra a **Aba 6 (`Logs Explorer`)** (ou o Terminal 2) e expanda o `jsonPayload`:
+     - `STATUS=200 | VEREDITO=ALLOWED | MCP_METHOD=tools/call | TOOL=consultar_contas_corporativas`
+     - `STATUS=403 | VEREDITO=DENIED  | MCP_METHOD=tools/call | TOOL=executar_estorno_ou_encerramento`
+     - `STATUS=403 | VEREDITO=DENIED  | DESTINO=https://example.com/auditoria-externa`
 
 ---
 
-## ❓ 4. Perguntas Frequentes de Clientes (FAQ & Limitações)
+## 🗺️ 4. Roteiro de Navegação Visual no Console GCP (Tela por Tela)
+
+Alterne entre o **Agent Console & Wire Inspector** e estas 6 telas do **Google Cloud Console** para tangibilizar a governança de Egress Zero-Trust:
+
+| Etapa / Recurso | Caminho no Menu & URL Direta | Aba / Sub-tela para Clicar | O que Apontar Visualmente para o Cliente |
+| :--- | :--- | :--- | :--- |
+| **1. Agent Gateway to Anywhere (`Egress`)** | **Agent Platform → Gateways**<br/>`https://console.cloud.google.com/agent-platform/gateways?project=cabral-governance-ai` | Clique em **`agw-egress-ata`** → abas **`Details`** e **`Observability`** | Mostre o modo `AGENT_TO_ANYWHERE` (sem exigir VPC/PSC-I) e, na aba **`Observability`**, os *Scorecards* de autorizações, taxa de falhas `403` e logs de saída para destinos não registrados. |
+| **2. Catálogo de Servidores MCP & Tools** | **Agent Platform → Agent Registry**<br/>`https://console.cloud.google.com/agent-platform/agent-registry/agents?project=cabral-governance-ai` | Clique na aba **`MCP servers`** (ou **`Services`**) → selecione **`agw-egress-mcp-erp`** | Mostre o endpoint registrado (`erp.tesouraria.mcp`) e o catálogo de ferramentas (`toolspec.json`) onde `consultar_contas_corporativas` é `readOnly` e `executar_estorno_ou_encerramento` é `destructive`. |
+| **3. Identidade SPIFFE do Agente FinOps** | **Agent Platform → Agent Registry**<br/>`https://console.cloud.google.com/agent-platform/agent-registry/agents?project=cabral-governance-ai` | Aba **`Agents`** → clique em **`agw-egress-agent-finops`** → aba **`Identity`** | Destaque o principal SPIFFE (`principal://agents.global.org-...`) emitido automaticamente pela plataforma (zero chaves JSON estáticas) e o vínculo de saída com `agw-egress-ata`. |
+| **4. Política L7 Zero-Trust (`failOpen: false`)** | **Network Security → Authz Policies**<br/>`https://console.cloud.google.com/net-security/authz-policies/list?project=cabral-governance-ai` | Clique em **`agw-egress-authz-policy`** | Aponte `action: CUSTOM` (`REQUEST_AUTHZ`) delegando ao IAP (`agw-egress-svc-ext-iap-enforced`) com `failOpen: false` (se a política negar, nada passa). |
+| **5. Backend MCP Blindado no Cloud Run** | **Cloud Run → Services**<br/>`https://console.cloud.google.com/run?project=cabral-governance-ai` | Clique em **`agw-egress-mcp-erp`** → abas **`Security`** e **`Logs`** | Mostre **Require authentication** (`--no-allow-unauthenticated`) e prove na aba **`Logs`** que a chamada bloqueada no **Ato 2** sequer chegou ao container do Cloud Run! |
+| **6. Auditoria L7 JSON-RPC no SIEM** | **Operations → Logging → Logs Explorer**<br/>`https://console.cloud.google.com/logs/query?project=cabral-governance-ai` | Filtro `resource.labels.gateway_name="agw-egress-ata"` → expanda **`jsonPayload.agentGatewayInfo.mcpInfo`** | Mostre que o gateway de rede decodificou o protocolo MCP na Camada 7, gravando `method: "tools/call"` e `parameter: "executar_estorno_ou_encerramento"` junto ao veredito `DENIED`. |
+
+---
+
+## ❓ 5. Perguntas Frequentes de Clientes (FAQ & Limitações)
 
 1. **Preciso configurar VPC, PSC Interface ou Cloud DNS para usar o Agent Gateway Egress?**
    - **Não para HTTPS roteável!** Para SaaS 3P, APIs parceiras, Google MCP ou [Cloud Run autenticado (`--ingress=all --no-allow-unauthenticated`)](https://docs.cloud.google.com/run/docs/securing/ingress), o modo standalone `googleManaged: AGENT_TO_ANYWHERE` funciona sem nenhuma VPC. Caso o cliente possua backends exclusivamente privados RFC 1918 (Cloud Run `internal`, GKE ILB ou On-Prem via VPN/Interconnect), basta acoplar uma [Private Service Connect Interface (PSC-I)](https://cloud.google.com/vpc/docs/about-private-service-connect-interfaces) e DNS Peering, conforme detalhado no [Codelab Oficial](https://codelabs.developers.google.com/cloudnet-agent-gateway?hl=pt-br).

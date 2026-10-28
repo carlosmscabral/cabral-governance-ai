@@ -25,10 +25,13 @@ Roteiro executivo para arquitetos e engenheiros apresentarem a **Demo 03 (`03-ge
    - No Jetski Web: `../../tools/agent-console/install_jetski_plugin.sh` e abra o painel lateral **🛡️ Agent Console & Wire Inspector**.
    - Ou em navegador local: `../../tools/agent-console/start.sh` (`http://127.0.0.1:8090`).
    - Selecione **`Demo 03: OTel Distribuído, Topologia Multi-Agente Viva & BigQuery Analytics`**.
-3. **Deixe 3 abas do Google Cloud Console abertas ao lado** (projeto `cabral-governance-ai`):
-   - **Aba 1 — Cloud Trace Explorer**: `https://console.cloud.google.com/traces/explorer?project=cabral-governance-ai`
-   - **Aba 2 — Agent Engine / Topology (`o11y-agent-orchestrator`)**: `https://console.cloud.google.com/vertex-ai/agents/agent-engines?project=cabral-governance-ai` *(clique em `o11y-agent-orchestrator` $\rightarrow$ aba **Topology**)*
-   - **Aba 3 — BigQuery Studio (`geap_o11y_demo03`)**: `https://console.cloud.google.com/bigquery?project=cabral-governance-ai`
+3. **Deixe 6 abas do Google Cloud Console pré-abertas ao lado** (projeto `cabral-governance-ai`):
+   - **Aba 1 — Agent Registry (`o11y-agent-orchestrator` → abas `Dashboard`, `Traces`, `Identity` e `Topology`)**: `https://console.cloud.google.com/agent-platform/agent-registry/agents?project=cabral-governance-ai`
+   - **Aba 2 — Agent Platform Topology (Visão Global do Projeto + Quick Queries)**: `https://console.cloud.google.com/agent-platform/topology?project=cabral-governance-ai`
+   - **Aba 3 — Cloud Trace Explorer (Waterfall Multi-Runtime)**: `https://console.cloud.google.com/traces/explorer?project=cabral-governance-ai`
+   - **Aba 4 — Cloud Run (`o11y-a2a-sla-risk` & `o11y-mcp-erp-ops`)**: `https://console.cloud.google.com/run?project=cabral-governance-ai`
+   - **Aba 5 — Cloud Storage (`completions/*.jsonl` Offload)**: `https://console.cloud.google.com/storage/browser/cabral-governance-ai-o11y-telemetry?project=cabral-governance-ai`
+   - **Aba 6 — BigQuery Studio (`geap_o11y_demo03` → Views `v_llm_response` e `v_tool_completed`)**: `https://console.cloud.google.com/bigquery?project=cabral-governance-ai`
 
 ---
 
@@ -85,7 +88,10 @@ flowchart LR
 ### Ato 3: Topologia Multi-Agente Viva (`Agent Registry`, `App Hub` & `App Topology`)
 
 - **O que falar:** *"Como implantamos o MCP com `--functional-type=mcp-server` e o Especialista com `--functional-type=agent`, o App Hub e o Agent Registry catalogam as identidades lógicas de cada carga de trabalho, e o App Topology constrói o mapa de dependências automaticamente (`Observability/SENDS_TRAFFIC`, latência p95 e taxa de erro) a partir do tráfego OpenTelemetry dos últimos 60 minutos."*
-- **No Console ou Terminal:** abra `Vertex AI -> Agent Engine -> o11y-agent-orchestrator -> Topology` (ou inspecione o grafo via CLI/REST):
+- **🌐 O que mostrar no Console GCP (Duas Visões Visuais):**
+  1. **Visão Focada no Agente (`Aba 1`)**: Em `Agent Platform → Agent Registry → Agents`, clique em **`o11y-agent-orchestrator`** e percorra as abas superiores **`Dashboard` → `Traces` → `Identity` → `Topology`**. Aponte os **3 nós conectados ao vivo** (`o11y-agent-orchestrator` enviando tráfego para `o11y-mcp-erp-ops` e `o11y-a2a-sla-risk`) e clique em cada nó para abrir o painel lateral de métricas!
+  2. **Visão Global do Projeto & Query Builder (`Aba 2`)**: Abra `Agent Platform → Topology` (`https://console.cloud.google.com/agent-platform/topology?project=cabral-governance-ai`), clique em **Quick Queries** e mostre como um arquiteto ou SRE consulta toda a malha de agentes e servidores MCP do projeto visualmente.
+- **Equivalente via CLI / REST (Opcional para perfil técnico):**
   ```bash
   gcloud beta agent-registry mcp-servers list --location=us-central1 --project=cabral-governance-ai
   gcloud beta agent-registry agents list --location=us-central1 --project=cabral-governance-ai
@@ -167,7 +173,24 @@ LIMIT 20;
 
 ---
 
-## ❓ 4. FAQ Executivo (Perguntas Frequentes de Clientes)
+## 🗺️ 4. Roteiro de Navegação Visual no Console GCP (Tela por Tela)
+
+Para conduzir um *walkthrough* visual de alto impacto para líderes de SRE, Arquitetura e FinOps, alterne entre o **Agent Console & Wire Inspector** e estas 8 telas do **Google Cloud Console**:
+
+| Etapa / Recurso | Caminho no Menu & URL Direta | Aba / Sub-tela para Clicar | O que Apontar Visualmente para o Cliente |
+| :--- | :--- | :--- | :--- |
+| **1. Visão 360° do Orquestrador** | **Agent Platform → Agent Registry → Agents**<br/>`https://console.cloud.google.com/agent-platform/agent-registry/agents?project=cabral-governance-ai` | Clique em **`o11y-agent-orchestrator`** → abas **`Dashboard`**, **`Traces`** e **`Identity`** | Mostre em uma única tela a saúde operacional do agente, a lista de traces correlacionados por `gen_ai.main_agent.id` e a identidade federada SPIFFE (`AGENT_IDENTITY`). |
+| **2. Topologia do Agente (`3 Nós Vivos`)** | **Agent Platform → Agent Registry → Agents**<br/>`https://console.cloud.google.com/agent-platform/agent-registry/agents?project=cabral-governance-ai` | Clique em **`o11y-agent-orchestrator`** → aba **`Topology`** | Destaque o grafo auto-descoberto conectando o Orquestrador ao **`o11y-mcp-erp-ops`** (`MCPServer`) e ao **`o11y-a2a-sla-risk`** (`Agent`), clicando nas arestas para exibir latência p95 e taxa de erro. |
+| **3. Topologia Global do Projeto** | **Agent Platform → Topology**<br/>`https://console.cloud.google.com/agent-platform/topology?project=cabral-governance-ai` | Seção **`Quick Queries`** ou **`Query Builder` (`+`)** | Mostre como um SRE ou arquiteto consulta visualmente toda a frota de agentes, servidores MCP, alertas e dependências do projeto sem diagramas estáticos. |
+| **4. Catálogo Auto-Descoberto de MCP & A2A** | **Agent Platform → Agent Registry**<br/>`https://console.cloud.google.com/agent-platform/agent-registry/agents?project=cabral-governance-ai` | Alterne entre as abas **`Agents`** (`o11y-a2a-sla-risk`) e **`MCP servers`** (`o11y-mcp-erp-ops`) | Aponte como ambos apareceram como *Discovered Agent* e *Discovered MCP Server* automaticamente graças às flags nativas do Cloud Run, sem cadastro manual. |
+| **5. Cascata Multi-Runtime (*Waterfall*)** | **Operations → Trace → Trace Explorer**<br/>`https://console.cloud.google.com/traces/explorer?project=cabral-governance-ai` | Clique no botão **`🔗 Cloud Trace`** do Agent Console → expanda a árvore de spans | Mostre na mesma linha do tempo os **3 runtimes** costurados pelo W3C `traceparent` e clique na barra vermelha `erp.legacy_wms_lock_contention` (`1,35 s`, `PG_LOCK_TIMEOUT` / PID `48291`). |
+| **6. Tipos Funcionais Nativos no Cloud Run** | **Cloud Run → Services**<br/>`https://console.cloud.google.com/run?project=cabral-governance-ai` | Clique em **`o11y-a2a-sla-risk`** e **`o11y-mcp-erp-ops`** | Mostre os serviços serverless independentes (`--no-allow-unauthenticated`), o tipo funcional (`agent` / `mcp-server`) e a identidade SPIFFE sem VPC/PSC. |
+| **7. Offload Governado de Prompts (`.jsonl`)** | **Cloud Storage → Buckets**<br/>`https://console.cloud.google.com/storage/browser/cabral-governance-ai-o11y-telemetry?project=cabral-governance-ai` | Pasta **`completions/`** | Mostre os arquivos `.jsonl` gravados pelo hook nativo GenAI OTel — mantendo os spans leves (`NO_CONTENT`) enquanto preserva auditoria completa sob IAM/LGPD no bucket. |
+| **8. FinOps & Proveniência em Tempo Real** | **BigQuery → Studio**<br/>`https://console.cloud.google.com/bigquery?project=cabral-governance-ai` | Dataset **`geap_o11y_demo03`** → views **`v_llm_response`** e **`v_tool_completed`** | Execute as Queries 1 e 2 mostrando tokens (`prompt`, `completion`, `thinking`, `cached`), `TTFT` e a separação explícita `tool_origin = 'MCP'` vs `'A2A'` com o mesmo `trace_id`. |
+
+---
+
+## ❓ 5. FAQ Executivo (Perguntas Frequentes de Clientes)
 
 1. **"Onde ficam os textos completos dos prompts se `CAPTURE_MESSAGE_CONTENT=NO_CONTENT` está ativo nos spans?"**
    - Os atributos de span no Cloud Trace têm limite estrito de 256 bytes e são voltados para latência/estrutura operacional. Os prompts e respostas completos são gravados sem truncamento em **dois lugares governados**: (a) em arquivos `.jsonl` no bucket `gs://cabral-governance-ai-o11y-telemetry/completions/` via hook nativo do OpenTelemetry GenAI, e (b) na tabela `geap_o11y_demo03.agent_events` no BigQuery (com offload automático de anexos grandes para GCS), onde você aplica IAM por coluna e retenção LGPD.

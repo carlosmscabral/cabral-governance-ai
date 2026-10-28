@@ -35,8 +35,20 @@ Cada diretório dentro de `demos/` é autocontido e deve conter:
 | `undeploy.sh` | Obrigatório (`+x`) | Desprovisionamento completo (*Zero Residuals*), removendo recursos e bindings IAM sem deixar resíduos. |
 | `README.md` | Obrigatório | Visão geral, diagrama de arquitetura Mermaid, início rápido, tabela de cenários de teste e matriz IAM. |
 | `VISUAL_GUIDE.md` | Obrigatório | Guia visual didático (C4 em 3 níveis, sequence diagrams, wire format e código anotado). |
-| `DEMO_GUIDE.md` | Obrigatório | Roteiro de apresentação ao vivo para clientes (pitch de 60s, atos da demo, comandos cURL e FAQ). |
+| `DEMO_GUIDE.md` | Obrigatório | Roteiro de apresentação ao vivo para clientes (pitch de 60s, abas pré-abertas com links diretos, coreografia visual por ato, roteiro tela a tela no Console GCP, comandos cURL e FAQ). |
 | `scenarios.json` | Recomendado | Manifesto declarativo de personas e cenários (Atos da Demo) carregado automaticamente pelo `tools/agent-console/`. |
+
+### 2.1 Contrato Visual Obrigatório do `DEMO_GUIDE.md` (Telas do Console GCP & Coreografia)
+
+Demonstrações executivas dependem fortemente de **impacto visual**. Nunca entregue um `DEMO_GUIDE.md` baseado apenas em comandos de terminal. Todo `DEMO_GUIDE.md` deve conter obrigatoriamente:
+
+1. **Checklist de Abas Pré-Abertas no Navegador (com Deep-Links Diretos)**:
+   - Listar na seção de preparação todas as URLs exatas do Google Cloud Console (`https://console.cloud.google.com/...?project=cabral-governance-ai`) que o apresentador deve deixar abertas antes da reunião (ex.: `agent-platform/gateways`, `agent-platform/agent-registry/agents`, `agent-platform/topology`, `agent-platform/security`, `traces/explorer`, `bigquery`, `logs/query`).
+   - Documentar explicitamente qualquer janela temporal ou *warm-up* necessário para gráficos visuais (ex.: disparar tráfego 5–10 min antes para popular arestas da janela fixa de 60 min da aba **Topology**).
+2. **Coreografia Visual em Duas Telas por Ato (`Agent Console` ⟷ `Console GCP`)**:
+   - Em cada Ato do roteiro, indicar claramente **(a) o que clicar e destacar no `Agent Console & Wire Inspector`** (resposta de negócio à esquerda + badges/headers/chunks à direita) e **(b) qual tela/aba específica do Google Cloud Console mostrar em seguida** para comprovar visualmente na infraestrutura da nuvem o que acabou de ocorrer.
+3. **Seção Dedicada `🗺️ Roteiro de Navegação Visual no Console GCP (Tela por Tela)`**:
+   - Incluir uma tabela estruturada mapeando cada recurso chave da demo com 4 colunas: **Etapa / Recurso**, **Caminho no Menu & URL Direta**, **Aba / Sub-tela para Clicar** (ex.: `Observability`, `Topology`, `Identity`, `Traces`, `Security`) e **O que Apontar Visualmente para o Cliente**.
 
 ---
 

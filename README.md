@@ -60,7 +60,7 @@ When adding a new demo under `demos/<demo-name>`, adhere to the contract defined
 | :--- | :--- |
 | `README.md` | Problem statement, architecture diagram, prerequisites, and step-by-step demo steps. |
 | `VISUAL_GUIDE.md` | Progressive architecture diagrams, sequence walks, wire formats, and annotated code. |
-| `DEMO_GUIDE.md` | Presenter playbook with 60s pitch, live demo acts, cURL commands, and customer FAQ. |
+| `DEMO_GUIDE.md` | Presenter playbook with 60s pitch, pre-opened GCP Console deep-links, two-screen visual choreography (`Agent Console` ⟷ `GCP Console`), screen-by-screen console tour, cURL commands, and FAQ. |
 | `scenarios.json` | Demo Playbook manifest (personas, acts, prompts, and presenter notes) auto-loaded by `tools/agent-console/`. |
 | `env.sh` | Standard environment variables (`PROJECT_ID=cabral-governance-ai`, `MODEL_NAME=gemini-3.8-flash` on `global`). |
 | `deploy.sh` | Idempotent bash script to configure GCP services, deploy agents/policies, and output test endpoints. |

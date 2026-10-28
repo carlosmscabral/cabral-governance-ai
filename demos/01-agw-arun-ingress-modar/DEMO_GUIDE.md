@@ -74,13 +74,16 @@ gcloud logging read "logName=\"projects/${PROJECT_ID}/logs/modelarmor.googleapis
     --format="table(timestamp, jsonPayload.operationType, jsonPayload.sanitizationResult.sanitizationVerdict, jsonPayload.sanitizationResult.sanitizationVerdictReason)"
 ```
 
-### Abas do Google Cloud Console Pré-abertas
-1. 📂 **Cloud Storage**: Bucket de dados (`gs://[PROJECT_ID]-agw-modar-data`) → Arquivo `customers_west.csv`.
-2. 🤖 **Vertex AI Reasoning Engines**: Console da Vertex AI → Agente `agw-modar-agent-crm`.
-3. 🛡️ **Model Armor**: Console de Segurança / Model Armor → Templates `agw-modar-req-template` e `agw-modar-resp-template`.
-4. 📑 **Cloud Logging / Logs Explorer**: Com o filtro:
+### Abas do Google Cloud Console Pré-abertas (Deep-Links Prontos)
+Deixe estas 6 abas abertas lado a lado com o **Agent Console & Wire Inspector** (substitua `cabral-governance-ai` caso use outro projeto):
+1. 🌐 **Agent Platform → Gateways (`agw-modar-ingress` → aba `Observability`)**: `https://console.cloud.google.com/agent-platform/gateways?project=cabral-governance-ai`
+2. 🛡️ **Agent Platform → Security (Painel Content Security / Model Armor)**: `https://console.cloud.google.com/agent-platform/security?project=cabral-governance-ai`
+3. 🧩 **Model Armor Templates (`agw-modar-req-template` / `agw-modar-resp-template`)**: `https://console.cloud.google.com/security/modelarmor/templates?project=cabral-governance-ai`
+4. 🤖 **Agent Platform → Agent Registry (`agw-modar-agent-crm`)**: `https://console.cloud.google.com/agent-platform/agent-registry/agents?project=cabral-governance-ai`
+5. 📂 **Cloud Storage (`customers_west.csv` com SSN real em texto claro)**: `https://console.cloud.google.com/storage/browser/cabral-governance-ai-agw-modar-data?project=cabral-governance-ai`
+6. 📑 **Cloud Logging / Logs Explorer (Auditoria `sanitize_operations`)**: `https://console.cloud.google.com/logs/query?project=cabral-governance-ai` com o filtro:
    ```text
-   logName="projects/[PROJECT_ID]/logs/modelarmor.googleapis.com%2Fsanitize_operations"
+   logName="projects/cabral-governance-ai/logs/modelarmor.googleapis.com%2Fsanitize_operations"
    ```
 
 ---
@@ -124,9 +127,9 @@ curl -s -X POST \
   }'
 ```
 
-#### 👀 O que destacar na tela:
-- O agente responde em **Português do Brasil** listando os clientes autorizados (`Bob Johnson`, `Alice Brown`, `Charlie Davis`).
-- No **Cloud Logging**, mostre a entrada com:
+#### 👀 Coreografia Visual (`Agent Console` ⟷ `Console GCP`):
+- **No Agent Console & Wire Inspector**: clique em **`Ato 1 — Consulta Segura (Região Oeste)`**. À esquerda, o agente responde em **PT-BR** (`Bob Johnson`, `Alice Brown`, `Charlie Davis`); à direita, aponte o banner verde **`✅ ALLOW`** e a chamada ADK `read_customer_file`.
+- **No Console GCP (`Aba 6 — Logs Explorer` ou `Aba 1 — Gateways`)**: mostre a entrada auditada em tempo real:
   - `operationType`: `SANITIZE_USER_PROMPT`
   - `sanitizationVerdict`: `MODEL_ARMOR_SANITIZATION_VERDICT_ALLOW`
   - `sanitizationVerdictReason`: *"The prompt did not violate any safety settings."*
@@ -217,17 +220,19 @@ gcloud logging read "logName=\"projects/${PROJECT_ID}/logs/modelarmor.googleapis
 
 ---
 
-## 🗺️ 4. Roteiro de Navegação Visual no Console GCP
+## 🗺️ 4. Roteiro de Navegação Visual no Console GCP (Tela por Tela)
 
-Para impressionar na demonstração navegando pela interface gráfica do Google Cloud Console:
+Para maximizar o impacto visual perante executivos (CISO, Arquitetura, Plataforma de IA), alterne do **Agent Console & Wire Inspector** para estas telas do **Google Cloud Console**:
 
-| Etapa | O que Abrir no Console | O que Explicar |
-|---|---|---|
-| **1. Agent Gateway** | **Network Security** → **Service Extensions** → **Authz Policies** | Mostre a política `agw-modar-authz-policy` com o profile `CONTENT_AUTHZ` associada ao gateway `agw-modar-ingress`. |
-| **2. Model Armor** | **Security** → **Model Armor** | Mostre os templates `agw-modar-req-template` (filtros de PI, Jailbreak e RAI) e `agw-modar-resp-template` (DLP De-identify). |
-| **3. Reasoning Engine** | **Vertex AI** → **Agent Engine / Reasoning Engines** | Mostre o agente `agw-modar-agent-crm` registrado em `us-central1`, com sua identidade SPIFFE (`principalSet://...`) e o gateway de Ingress vinculado. |
-| **4. Cloud Storage** | **Cloud Storage** → **Buckets** → `*-agw-modar-data` | Mostre os arquivos de dados brutos (`customers_west.csv`, `customers_east.csv`). |
-| **5. Logs Explorer** | **Operations** → **Logging** → **Logs Explorer** | Filtre por `modelarmor.googleapis.com/sanitize_operations` e expanda o JSON Payload de uma requisição bloqueada e outra permitida. |
+| Etapa / Recurso | Caminho no Menu & URL Direta | Aba / Sub-tela para Clicar | O que Apontar Visualmente para o Cliente |
+| :--- | :--- | :--- | :--- |
+| **1. Agent Gateway (Ingress)** | **Agent Platform → Gateways**<br/>`https://console.cloud.google.com/agent-platform/gateways?project=cabral-governance-ai` | Clique em **`agw-modar-ingress`** → aba **`Observability`** | Mostre os *Scorecards* de requisições inspecionadas, a taxa de bloqueios na borda (`CLIENT_TO_AGENT`) e os gráficos de tráfego sem tocar no código do agente. |
+| **2. Painel de Segurança de Conteúdo** | **Agent Platform → Security**<br/>`https://console.cloud.google.com/agent-platform/security?project=cabral-governance-ai` | Visão geral de **Content Security** / **Findings** | Destaque o painel consolidado da plataforma mostrando detecções de *Prompt Injection / Jailbreak* e *Sensitive Data Protection* em toda a frota de agentes. |
+| **3. Templates do Model Armor** | **Security → Model Armor**<br/>`https://console.cloud.google.com/security/modelarmor/templates?project=cabral-governance-ai` | Clique em **`agw-modar-req-template`** e depois em **`agw-modar-resp-template`** | Mostre como a política é 100% declarativa: filtros de *Prompt Injection & Jailbreak* + *RAI* na entrada, e vínculo direto com os templates do Cloud DLP na saída. |
+| **4. Templates do Cloud DLP (SDP)** | **Security → Sensitive Data Protection → Configuration → Templates**<br/>`https://console.cloud.google.com/security/sensitive-data-protection/data-profiles/configuration/templates?project=cabral-governance-ai` | Abas **`Inspect`** (`agw-modar-ssn-inspect`) e **`De-identify`** (`agw-modar-ssn-redact`) | Aponte o `infoType` `US_SOCIAL_SECURITY_NUMBER` (e explique que adicionar `BRAZIL_CPF_NUMBER` para LGPD leva 2 cliques, zero redeploy de código). |
+| **5. Agente Governado no Catálogo** | **Agent Platform → Agent Registry**<br/>`https://console.cloud.google.com/agent-platform/agent-registry/agents?project=cabral-governance-ai` | Aba **`Agents`** → clique em **`agw-modar-agent-crm`** → abas **`Dashboard`**, **`Identity`** e **`Security`** | Mostre a identidade federada SPIFFE (`principal://agents.global...`) e o vínculo de governança de entrada com o gateway `agw-modar-ingress`. |
+| **6. Dado Bruto no Cloud Storage** | **Cloud Storage → Buckets**<br/>`https://console.cloud.google.com/storage/browser/cabral-governance-ai-agw-modar-data?project=cabral-governance-ai` | Clique em **`customers_west.csv`** → visualização / download rápido | Contraste o CSV real contendo `234-56-7890` com o texto mascarado `[US_SOCIAL_SECURITY_NUMBER]` entregue ao canal no **Ato 2**. |
+| **7. Auditoria Forense / SIEM** | **Operations → Logging → Logs Explorer**<br/>`https://console.cloud.google.com/logs/query?project=cabral-governance-ai` | Filtro `modelarmor.googleapis.com%2Fsanitize_operations` → expanda **`jsonPayload`** | Compare lado a lado um evento `MODEL_ARMOR_SANITIZATION_VERDICT_ALLOW` (**Ato 1**), um `deidentifyResult` com `transformedBytes` (**Ato 2**) e um `VERDICT_BLOCK` por `pi_and_jailbreak` (**Ato 3**). |
 
 ---
 
