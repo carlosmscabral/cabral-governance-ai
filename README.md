@@ -35,8 +35,9 @@ cabral-governance-ai/
 │       └── static/             # Zero-build split-view frontend (HTML/CSS/JS)
 │
 └── demos/                      # Individual governance demos
-    ├── 01-agw-arun-ingress-modar/  # Agent Gateway Ingress + Model Armor + Cloud DLP
-    └── 02-agw-arun-egress-mcp/     # Agent Gateway to Anywhere (Egress) + Agent Registry + IAP CEL MCP
+    ├── 01-agw-arun-ingress-modar/         # Agent Gateway Ingress + Model Armor + Cloud DLP
+    ├── 02-agw-arun-egress-mcp/            # Agent Gateway to Anywhere (Egress) + Agent Registry + IAP CEL MCP
+    └── 03-geap-otel-topology-analytics/   # Multi-Agent OTel (MCP + A2A), Live Topology & BigQuery Analytics
         ├── README.md           # Scenario documentation & walkthrough
         ├── VISUAL_GUIDE.md     # Progressive C4 diagrams, sequence walks & wire formats
         ├── DEMO_GUIDE.md       # Live customer presentation script (4 acts) & FAQ
@@ -45,9 +46,8 @@ cabral-governance-ai/
         ├── deploy.sh           # Idempotent deployment script
         ├── test.sh             # Automated PT-BR end-to-end test suite
         ├── undeploy.sh         # Zero-residuals teardown script
-        ├── cfg/                # Gateway, Service Extension, Authz Policy & IAP CEL templates
-        ├── scripts/            # Modular provisioning steps (01..05)
-        └── src/                # ADK agent + Streamable HTTP FastMCP server (Cloud Run)
+        ├── scripts/            # Modular provisioning steps (01..03)
+        └── src/                # ADK Orchestrator + Cloud Run A2A Specialist + Cloud Run FastMCP
 ```
 
 ---
@@ -104,7 +104,8 @@ Click the **🛡️ Agent Console & Wire Inspector** icon in the right-hand side
 
 Key capabilities:
 * **Auto-Discovered Demo Playbooks**: One-click scenario buttons (`scenarios.json`) and automatic `.state/agent_info.json` endpoint discovery.
-* **Resizable Split-View & Live Wire Inspector ("Lightweight Postman")**: Draggable central divider (`70/30`, `50/50`, `30/70` presets) with real-time inspection of Request Headers, JSON Payloads, Response Latency (`TTFT` + `Total ms`), ADK Tool Calls (`function_call`/`function_response`), SSE Chunk Timelines, and Governance Verdict banners (`ALLOW`, `DLP REDACT`, `MODEL ARMOR INGRESS/EGRESS BLOCK`, plus streaming leak warnings).
+* **Resizable Split-View & Live Wire Inspector ("Lightweight Postman")**: Draggable central divider (`70/30`, `50/50`, `30/70` presets) with real-time inspection of Request Headers, JSON Payloads, Response Latency (`TTFT` + `Total ms`), ADK Tool Calls (`function_call`/`function_response`), SSE Chunk Timelines, and Governance Verdict banners (`ALLOW`, `DLP REDACT`, `MODEL ARMOR INGRESS/EGRESS BLOCK`, `AGW EGRESS L7 MCP BLOCK`, plus streaming leak warnings).
+* **Distributed W3C `traceparent` Injection & 1-Click Cloud Trace**: Automatically stamps outgoing requests with a deterministic W3C `traceparent` header and renders a **🔗 Cloud Trace** deep-link pill in the Wire Inspector to inspect multi-agent waterfalls (Reasoning Engine + Cloud Run A2A + Cloud Run MCP) in one click.
 * **Server-Side Session Lifecycle (`+ Nova Sessão` / `🔄 Zerar Sessão`)**: Creates and deletes persistent sessions on `VertexAiSessionService` via `:query` (`create_session` / `delete_session`) or switches to stateless/ephemeral mode.
 * **Two-Layer Auth & 3LO Readiness**: Automatic `gcloud` token caching (`argolis`) plus delegated user identity headers (`X-Forwarded-Authorization`) and local `/oauth/callback` receiver.
 
@@ -116,7 +117,7 @@ Key capabilities:
 | :--- | :--- | :--- | :--- |
 | [`01-agw-arun-ingress-modar`](demos/01-agw-arun-ingress-modar) | *Ingress Governance & Guardrails* | 🟢 Ready | Agent Gateway Ingress (`CLIENT_TO_AGENT`) com Vertex AI Reasoning Engine, Model Armor e Cloud DLP para mitigação de prompt injection e redação de PII/SSN. |
 | [`02-agw-arun-egress-mcp`](demos/02-agw-arun-egress-mcp) | *Egress Governance & Zero-Trust MCP* | 🟢 Ready | Agent Gateway to Anywhere (`AGENT_TO_ANYWHERE`) sem VPC/PSC-I, com Agent Registry, identidade SPIFFE + OIDC no Cloud Run e IAP CEL L7 (`isReadOnly == true`) bloqueando tools MCP destrutivas e exfiltração para domínios não registrados. |
-| *03-agent-observability-trace* | *Observability & Auditability* | 📋 Planned | Cloud Trace, BigQuery Agent Analytics, telemetria OpenTelemetry e auditoria de decisões de sanitização. |
+| [`03-geap-otel-topology-analytics`](demos/03-geap-otel-topology-analytics) | *Multi-Agent OTel, Live Topology & FinOps Analytics* | 🟢 Ready | Costura OpenTelemetry (`W3C traceparent`) em 3 runtimes (Reasoning Engine + Cloud Run A2A `--functional-type=agent` + Cloud Run FastMCP `--functional-type=mcp-server`), topologia viva auto-descoberta e BigQuery Agent Analytics em tempo real (`MCP` vs `A2A`, tokens e offload `.jsonl` no GCS). |
 
 
 ---

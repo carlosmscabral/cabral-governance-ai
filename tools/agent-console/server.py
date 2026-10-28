@@ -31,6 +31,7 @@ import datetime
 import json
 import os
 import re
+import secrets
 import shlex
 import subprocess
 import time
@@ -311,6 +312,8 @@ def discover_demos() -> list[dict[str, Any]]:
                 or env_defaults.get("AGW_URI", ""),
                 "agent_gateway_egress": agent_info.get("agent_gateway_egress", ""),
                 "mcp_url": agent_info.get("mcp_url", ""),
+                "a2a_card_url": agent_info.get("a2a_card_url", ""),
+                "bq_dataset": agent_info.get("bq_dataset", ""),
                 "default_profile": scenarios_meta.get("default_profile", "vertex_stream_query"),
                 "default_user_id": scenarios_meta.get("default_user_id", "cliente-demo"),
                 "personas": scenarios_meta.get(
@@ -1006,6 +1009,25 @@ async def proxy_stream(request: Request) -> StreamingResponse:
                 continue
             wire_headers[k] = str(v)
 
+    # Inject W3C Trace Context (`traceparent`) automatically if absent so every turn gets a
+    # deterministic Cloud Trace deep-link & stitches across Reasoning Engine + Cloud Run MCP/A2A!
+    existing_tp_key = next((k for k in wire_headers if k.lower() == "traceparent"), None)
+    if existing_tp_key:
+        traceparent_val = wire_headers[existing_tp_key]
+        tp_parts = traceparent_val.split("-")
+        trace_id = tp_parts[1] if len(tp_parts) >= 2 and len(tp_parts[1]) == 32 else secrets.token_hex(16)
+    else:
+        trace_id = secrets.token_hex(16)
+        span_id = secrets.token_hex(8)
+        traceparent_val = f"00-{trace_id}-{span_id}-01"
+        wire_headers["traceparent"] = traceparent_val
+
+    cloud_trace_url = (
+        f"https://console.cloud.google.com/traces/explorer;traceId={trace_id}?project={project_id}"
+        if project_id
+        else f"https://console.cloud.google.com/traces/explorer;traceId={trace_id}"
+    )
+
     masked_req_headers = mask_headers(wire_headers)
     curl_cmd = build_curl_command(method, target_url, masked_req_headers, body_payload)
 
@@ -1021,6 +1043,9 @@ async def proxy_stream(request: Request) -> StreamingResponse:
                 "headers": masked_req_headers,
                 "body": body_payload,
                 "curl": curl_cmd,
+                "trace_id": trace_id,
+                "traceparent": traceparent_val,
+                "cloud_trace_url": cloud_trace_url,
             },
             ensure_ascii=False,
         ) + "\n"
@@ -1196,6 +1221,8 @@ async def proxy_stream(request: Request) -> StreamingResponse:
                             "tool_responses": all_tool_responses,
                             "stream_error": stream_error_obj,
                             "governance_verdict": verdict,
+                            "trace_id": trace_id,
+                            "cloud_trace_url": cloud_trace_url,
                         },
                         ensure_ascii=False,
                     ) + "\n"

@@ -17,7 +17,9 @@ Toda demo em `demos/<NN-slug>/` deve possuir um arquivo `env.sh` que respeite os
 3. **Autenticação Consistente no SDK Python (`deploy_agent.py`)**:
    - Para evitar conflito entre o Application Default Credentials (ADC) global da máquina e a configuração ativa do `gcloud` (`argolis`), scripts Python de deploy/teste devem extrair o token via `gcloud auth print-access-token` e injetar `google.oauth2.credentials.Credentials(token=token)` no `vertexai.init()` e `vertexai.Client()` (com fallback para ADC padrão).
 4. **Detecção de Drift e Atualização In-Place**:
-   - Os scripts de deploy (`05_deploy_agent.sh` / `deploy_agent.py`) nunca devem assumir cegamente que um Reasoning Engine existente está atualizado apenas porque o recurso existe. Eles devem inspecionar o `MODEL_NAME` ativo no `.spec.deploymentSpec.env` e executar `client.agent_engines.update(...)` (preservando o Engine ID e a identidade SPIFFE) sempre que houver divergência.
+   - Os scripts de deploy (`05_deploy_agent.sh`, `03_deploy_orchestrator_and_topology.sh`, `02_deploy_mcp_and_a2a.sh`, `deploy_agent.py`) nunca devem assumir cegamente que um Reasoning Engine ou serviço Cloud Run existente está atualizado apenas porque o recurso existe.
+   - No **Vertex AI Reasoning Engine**, devem inspecionar o `MODEL_NAME` e variáveis críticas em `.spec.deploymentSpec.env` e executar `client.agent_engines.update(...)` (preservando o Engine ID e a identidade SPIFFE) sempre que houver divergência.
+   - Em **topologias multi-nó no Cloud Run** (`--functional-type=agent` ou `mcp-server`), devem verificar o hash do código-fonte e o `MODEL_NAME` ativo na revisão do serviço para evitar rebuilds desnecessários no Cloud Build em execuções semanais de CI quando não houver mudança, mas garantindo atualização *in-place* (preservando a URL determinística e a identidade SPIFFE) caso haja drift.
 
 ---
 
@@ -48,10 +50,11 @@ Para que o **CI Semanal Autônomo** (`scripts/ci_healthcheck.sh`) valide e recup
 2. **Cobertura Mínima Obrigatória de Cenários (em PT-BR)**:
    - **Cenário Positivo (Caminho Feliz / Negócio)**: Envia uma pergunta legítima em PT-BR e valida o conteúdo semântico real retornado pelo agente (ex.: nomes ou valores específicos do dataset).
      - *Atenção*: Conexões SSE (`:streamQuery?alt=sse`) podem retornar `HTTP 200` no transporte mesmo quando ocorre erro interno no agente (ex.: `{"error_code": "ClientError", "error_message": "404 NOT_FOUND"}`). Por isso, o teste **sempre** deve validar a presença do dado esperado na resposta e falhar caso receba erro.
-   - **Cenário de Governança / Guardrail Ativo**: Valida que a política de segurança da demo atua como esperado:
+   - **Cenário de Governança / Guardrail / Resiliência Ativa**: Valida que a política de segurança ou resiliência operacional da demo atua como esperado:
      - Ex. Ingress: Redação de PII/SSN via Model Armor + Cloud DLP (`[US_SOCIAL_SECURITY_NUMBER]`) e bloqueio de Prompt Injection / Jailbreak na borda (`HTTP 403` / `Model Armor: Prompt violates content security configurations`).
      - Ex. Egress / MCP: Permissão para tool `readOnly` e bloqueio para tool destrutiva/escrita via Agent Gateway / IAM / SGP.
-   - **Cenário de Observabilidade / Auditoria**: Verifica nos logs/traces (`Cloud Logging` ou `Cloud Trace`) se o veredito de segurança ou span de telemetria foi devidamente registrado.
+     - Ex. Observabilidade / Multi-Agente: Diagnóstico gracioso de falha/gargalo operacional (`StatusCode.ERROR` em span filho MCP/WMS) com escalonamento A2A sem queda silenciosa do orquestrador.
+   - **Cenário de Observabilidade / Auditoria**: Verifica nos logs, traces e tabelas analíticas (`Cloud Logging`, `Cloud Trace`, `BigQuery Agent Analytics` e `Agent Registry` / `App Topology`) se o veredito de segurança, a costura distribuída W3C `traceparent` entre runtimes, as views semânticas (`v_llm_response`, `v_tool_completed`) e a descoberta de nós foram devidamente registrados.
 3. **Higiene de Shell Script (`set -euo pipefail`)**:
    - Sempre usar pré-incremento aritmético `((++TESTS_PASSED))` e `((++TESTS_FAILED))` (nunca pós-incremento `((TESTS_PASSED++))` partindo de `0`, pois `(( 0 ))` retorna status `1` no Bash e aborta scripts com `set -e` / `trap ERR`).
    - Incluir pequeno *pacing* (`sleep 2`) entre chamadas consecutivas de streaming para evitar bursts desnecessários.
@@ -66,10 +69,10 @@ O repositório conta com um orquestrador de CI em [`scripts/ci_healthcheck.sh`](
 2. **Fluxo do `scripts/ci_healthcheck.sh`**:
    - **Preflight OAuth (`exit 2`)**: Verifica se o token da configuração `argolis` está ativo (`gcloud auth print-access-token --configuration=argolis`). Se tiver expirado, encerra com código `2` (`[AUTH_EXPIRED]`) para que o agente apenas solicite `gcloud auth login --configuration=argolis`, sem abrir issue falsa de bug.
    - **Preflight de Modelo Global**: Valida se `gemini-3.8-flash` responde `HTTP 200` no endpoint `global` da Vertex AI.
-   - **Upgrade de SDK (`--upgrade-sdk`)**: Atualiza os pacotes Python do `.venv` (`google-cloud-aiplatform[adk,agent_engines]`, `google-cloud-storage`, etc.) para detectar quebras de SDK precocemente.
+   - **Upgrade de SDK (`--upgrade-sdk`)**: Atualiza os pacotes Python do `.venv` (`google-cloud-aiplatform[adk,agent_engines]`, `google-cloud-storage`, mais dependências opcionais detectadas em `src/pyproject.toml` como `mcp`, `google-adk[bigquery-analytics,a2a]`, `opentelemetry-*` e `google-cloud-bigquery*`) para detectar quebras de SDK precocemente.
    - **Execução (`deploy.sh` + `test.sh`)**: Garante que a infraestrutura e o agente estão sincronizados no Argolis e executa todos os testes ponta a ponta.
 3. **Protocolo de Auto-Healing (Em Caso de Falha `exit 1`)**:
-   - O agente autônomo inspeciona os logs em `.state/ci_logs/`, diagnostica a causa raiz (drift de modelo, depreciação de classe no SDK ADK/Vertex AI ou mudança de flag no `gcloud`), aplica o fix no código, reexecuta `deploy.sh` + `test.sh` para deixar o ambiente de demo 100% operacional no Argolis e registra uma **Issue + Pull Request** no repositório GitHub (`carlosmscabral/cabral-governance-ai`).
+   - O agente autônomo inspeciona os logs em `.state/ci_logs/`, diagnostica a causa raiz (drift de modelo, depreciação de classe/parâmetro no SDK ADK/Vertex AI, mudança de schema no BigQuery Analytics ou flag no `gcloud`), aplica o fix no código, reexecuta `deploy.sh` + `test.sh` para deixar o ambiente de demo 100% operacional no Argolis e registra uma **Issue + Pull Request** no repositório GitHub (`carlosmscabral/cabral-governance-ai`).
 
 ---
 
@@ -80,6 +83,7 @@ Para apresentações ao vivo sem depender apenas de `curl` no terminal, o reposi
 1. **Modos de Uso**:
    - **Plugin Nativo do Jetski Web**: `./tools/agent-console/install_jetski_plugin.sh` instala o painel lateral (`~/.gemini/config/plugins/agent_console/`) servido via ÜberProxy.
    - **Servidor Local Standalone**: `./tools/agent-console/start.sh` inicia em `http://127.0.0.1:8090`.
-2. **Integração Automática com Demos**:
+2. **Integração Automática com Demos & Cloud Trace**:
    - O console descobre automaticamente qualquer pasta `demos/*` lendo `.state/agent_info.json`, `env.sh` e `scenarios.json`.
+   - Injeta automaticamente o cabeçalho W3C `traceparent` em cada turno proxied e renderiza um botão **🔗 Cloud Trace** em 1 clique no Wire Inspector para abrir a cascata distribuída no console do GCP.
    - Sempre que criar uma nova demo, inclua um arquivo `scenarios.json` com os atos da demonstração (`safe`, `dlp`, `attack`) para habilitar o disparo em 1 clique no console.

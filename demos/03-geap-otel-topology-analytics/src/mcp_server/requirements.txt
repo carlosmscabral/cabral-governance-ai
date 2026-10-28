@@ -1,0 +1,9 @@
+mcp>=1.26.0,<2.0.0
+uvicorn>=0.30.0
+starlette>=0.38.0
+google-auth>=2.35.0
+requests>=2.32.0
+opentelemetry-api>=1.37.0
+opentelemetry-sdk>=1.37.0
+opentelemetry-exporter-otlp-proto-http>=1.37.0
+opentelemetry-resourcedetector-gcp>=1.9.0a0

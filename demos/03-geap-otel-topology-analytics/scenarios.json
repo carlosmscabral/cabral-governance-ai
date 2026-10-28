@@ -1,0 +1,56 @@
+{
+  "demo_id": "03-geap-otel-topology-analytics",
+  "title": "Demo 03: OTel Distribuído, Topologia Multi-Agente Viva & BigQuery Analytics",
+  "subtitle": "Costura W3C traceparent em 3 Runtimes (Reasoning Engine + Cloud Run A2A + Cloud Run FastMCP) e FinOps em Tempo Real no BigQuery",
+  "default_profile": "vertex_stream_query",
+  "default_user_id": "sre-finops-lead",
+  "personas": [
+    {
+      "id": "sre-finops-lead",
+      "label": "sre-finops-lead (Líder SRE & FinOps de IA)",
+      "role": "Audita latência ponta a ponta (Cloud Trace), topologia viva (MCP + A2A) e custo de tokens por turno no BigQuery"
+    },
+    {
+      "id": "gestor-logistica-b2b",
+      "label": "gestor-logistica-b2b (Operações Corporativas)",
+      "role": "Monitora pedidos industriais críticos no ERP e avalia multas contratuais de SLA"
+    },
+    {
+      "id": "engenheiro-plantao-wms",
+      "label": "engenheiro-plantao-wms (On-Call Incident Response)",
+      "role": "Investiga gargalos de banco de dados (PG_LOCK_TIMEOUT) e impacto financeiro na cadeia fria"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "act-1-multiagent-happy-path",
+      "act": "Ato 1",
+      "title": "Trace Distribuído 3-Nós (Orquestrador -> FastMCP -> Especialista A2A)",
+      "category": "safe",
+      "badge": "OTEL 3-NODE TRACE",
+      "user_id": "gestor-logistica-b2b",
+      "prompt": "Consulte o pedido corporativo PED-9042 no ERP e acione o especialista de risco de SLA para calcular a multa estimada em reais e o plano de mitigação.",
+      "expected_behavior": "Em um único W3C Trace ID, o Orquestrador no Reasoning Engine consulta 'consultar_pedido_corporativo' no FastMCP do Cloud Run (Metalúrgica Aurora S.A., R$ 185.000,00, 4h de atraso) e delega via A2A ao 'sla_risk_specialist' no Cloud Run (multa R$ 5.550,00 vs frete dedicado R$ 2.400,00). O BigQuery registra tool_origin='MCP' e 'A2A' em sub-segundo."
+    },
+    {
+      "id": "act-2-wms-lock-bottleneck",
+      "act": "Ato 2",
+      "title": "Diagnóstico de Gargalo & Span ERROR (Lock 1.35s no WMS + Cadeia Fria)",
+      "category": "dlp",
+      "badge": "SPAN ERROR + LATENCY",
+      "user_id": "engenheiro-plantao-wms",
+      "prompt": "Concilie o lote logístico LOTE-LOCK-503 no WMS, diagnostique qualquer gargalo técnico de banco de dados e acione o especialista A2A para calcular o risco financeiro de SLA do pedido impactado.",
+      "expected_behavior": "A ferramenta MCP 'conciliar_lote_logistico' simula contenção real de 1.350ms na tabela 'wms_expedicao_fria' (PG_LOCK_TIMEOUT / PID 48291), marcando o span filho 'erp.legacy_wms_lock_contention' com StatusCode.ERROR no Cloud Trace Waterfall, e aciona o agente A2A para quantificar a multa hospitalar da BioFarma (PED-5503, R$ 410.000,00)."
+    },
+    {
+      "id": "act-3-fleet-triage-finops",
+      "act": "Ato 3",
+      "title": "Triagem Executiva da Fila B2B (Geração de Telemetria FinOps & Cache)",
+      "category": "safe",
+      "badge": "BQ FINOPS STREAM",
+      "user_id": "sre-finops-lead",
+      "prompt": "Liste todos os pedidos críticos na fila do ERP, identifique quais estão com atraso de SLA e consolide a exposição total de multas consultando o especialista de risco.",
+      "expected_behavior": "Dispara múltiplas chamadas coordenadas MCP + A2A na mesma árvore de spans, populando 'v_llm_response', 'v_tool_completed' e 'v_a2a_interaction' no dataset BigQuery 'geap_o11y_demo03' para análise SQL de TTFT, tokens de raciocínio e custo por centro de custo."
+    }
+  ]
+}

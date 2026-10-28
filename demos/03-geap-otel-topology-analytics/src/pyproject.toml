@@ -1,0 +1,23 @@
+[project]
+name = "geap-o11y-topology-analytics"
+version = "0.1.0"
+description = "Multi-Agent ADK Orchestrator with Distributed OTel, Live Topology (MCP + A2A) & BigQuery Agent Analytics"
+requires-python = ">=3.11"
+dependencies = [
+    "google-cloud-aiplatform[adk,agent_engines]>=1.80.0",
+    "google-adk[bigquery-analytics,a2a]>=2.12.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.37.0",
+    "google-cloud-bigquery>=3.25.0",
+    "google-cloud-bigquery-storage>=2.26.0",
+    "google-cloud-storage>=2.14.0",
+    "fsspec[gcs]>=2024.6.0",
+    "gcsfs>=2024.6.0",
+    "google-auth>=2.35.0",
+    "mcp>=1.26.0,<2.0.0",
+    "a2a-sdk>=1.2.0",
+    "httpx>=0.28.0",
+    "opentelemetry-instrumentation-httpx>=0.48b0",
+    "opentelemetry-instrumentation-google-genai>=0.4b0",
+    "pydantic>=2.0.0",
+    "cloudpickle>=3.0.0",
+]

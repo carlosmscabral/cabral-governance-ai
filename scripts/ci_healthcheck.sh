@@ -78,6 +78,19 @@ for demo_dir in "${REPO_ROOT}/demos/"*; do
             if [[ -f "src/pyproject.toml" ]] && grep -q '"mcp' "src/pyproject.toml"; then
                 EXTRA_PKGS+=("mcp>=1.26.0,<2.0.0" "google-auth>=2.28.0" "httpx>=0.27.0")
             fi
+            if [[ -f "src/pyproject.toml" ]] && grep -q 'bigquery-analytics' "src/pyproject.toml"; then
+                EXTRA_PKGS+=(
+                    "google-adk[bigquery-analytics,a2a]>=2.12.0"
+                    "opentelemetry-exporter-otlp-proto-http>=1.37.0"
+                    "google-cloud-bigquery>=3.25.0"
+                    "google-cloud-bigquery-storage>=2.26.0"
+                    "fsspec[gcs]>=2024.6.0"
+                    "gcsfs>=2024.6.0"
+                    "a2a-sdk>=1.2.0"
+                    "opentelemetry-instrumentation-httpx>=0.48b0"
+                    "opentelemetry-instrumentation-google-genai>=0.4b0"
+                )
+            fi
             if command -v uv &>/dev/null; then
                 uv pip install --upgrade --python ".venv/bin/python" \
                     "google-cloud-aiplatform[adk,agent_engines]>=1.80.0" \

@@ -13,12 +13,12 @@ mkdir -p "${PLUGIN_DIR}/assets" "${PLUGIN_DIR}/sidecars/inspector"
 cat > "${PLUGIN_DIR}/plugin.json" <<EOF
 {
   "name": "agent_console",
-  "description": "Agent Console & Wire Inspector (Chat + Lightweight Postman) para simular canais e inspecionar chamadas HTTP/SSE, Tool Calls e vereditos do Model Armor / DLP nas demos do repositório cabral-governance-ai.",
+  "description": "Agent Console & Wire Inspector (Chat + Lightweight Postman) para simular canais e inspecionar chamadas HTTP/SSE, Tool Calls, W3C traceparent (Cloud Trace) e vereditos de governança nas demos do repositório cabral-governance-ai.",
   "logo": "assets/logo.svg",
   "suggestedPrompts": [
-    "Abra o painel Agent Console & Wire Inspector para testar a Demo 01",
-    "Verifique o status do Reasoning Engine e dos cenários da Demo 01",
-    "Inspecione os logs do Model Armor após disparar os cenários no Agent Console"
+    "Abra o painel Agent Console & Wire Inspector para testar as demos",
+    "Verifique o status dos Reasoning Engines e cenários das Demos 01, 02 e 03",
+    "Inspecione os traces distribuídos e métricas no BigQuery após rodar a Demo 03 no Agent Console"
   ]
 }
 EOF

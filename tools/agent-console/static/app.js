@@ -82,6 +82,7 @@ const els = {
   metricTtftBadge: document.getElementById("metricTtftBadge"),
   metricTotalBadge: document.getElementById("metricTotalBadge"),
   metricChunksBadge: document.getElementById("metricChunksBadge"),
+  metricTraceLink: document.getElementById("metricTraceLink"),
   verdictBanner: document.getElementById("verdictBanner"),
   leakWarningBanner: document.getElementById("leakWarningBanner"),
   tabChunkCounter: document.getElementById("tabChunkCounter"),
@@ -196,6 +197,8 @@ function selectDemo(demoId) {
         `Reasoning Engine: ${found.reasoning_engine_name || found.engine_id}`,
         found.agent_gateway_egress ? `Agent Gateway Egress: ${found.agent_gateway_egress}` : "",
         found.mcp_url ? `MCP Backend: ${found.mcp_url}` : "",
+        found.a2a_card_url ? `A2A Specialist: ${found.a2a_card_url}` : "",
+        found.bq_dataset ? `BigQuery Analytics: ${found.bq_dataset}` : "",
       ]
         .filter(Boolean)
         .join("\n");
@@ -681,6 +684,12 @@ function updateTurnDOM(turn) {
       `<span class="pill-badge neutral">TTFT ${turn.complete.ttft_ms ?? "--"}ms • Total ${turn.complete.total_ms}ms</span>`
     );
   }
+  const traceId = turn.complete?.trace_id || turn.request?.trace_id;
+  if (traceId) {
+    badges.push(
+      `<span class="pill-badge neutral" title="W3C Trace ID: ${escapeHtml(traceId)}">🔍 trace=${escapeHtml(traceId.slice(0, 8))}…</span>`
+    );
+  }
   activeTools.forEach((tc) => {
     const tName = tc.name || "functionCall";
     if (blockedTools.has(tName)) {
@@ -739,6 +748,19 @@ function renderInspector(turn) {
   els.metricTotalBadge.textContent = `Total: ${total} ms`;
   els.metricChunksBadge.textContent = `Chunks: ${turn.chunks.length}`;
   els.tabChunkCounter.textContent = String(turn.chunks.length);
+
+  const traceUrl = turn.complete?.cloud_trace_url || turn.request?.cloud_trace_url;
+  const traceId = turn.complete?.trace_id || turn.request?.trace_id;
+  if (els.metricTraceLink) {
+    if (traceUrl && traceId) {
+      els.metricTraceLink.href = traceUrl;
+      els.metricTraceLink.textContent = `🔗 Cloud Trace (${traceId.slice(0, 8)}…)`;
+      els.metricTraceLink.title = `Abrir Trace ID ${traceId} no Google Cloud Trace Explorer`;
+      els.metricTraceLink.classList.remove("hidden");
+    } else {
+      els.metricTraceLink.classList.add("hidden");
+    }
+  }
 
   // Governance Verdict & Audit Leak Warning Banners
   if (v) {
