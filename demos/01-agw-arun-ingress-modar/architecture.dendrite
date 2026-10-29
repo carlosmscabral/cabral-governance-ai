@@ -1,0 +1,215 @@
+theme: "gcp-pro"
+renderOrder: nodes-first
+direction: right
+spacing: 28
+
+const GcpBlue = "#1a73e8"
+const GcpGreen = "#1e8e3e"
+const GuardRed = "#d93025"
+const AmberStroke = "#b45309"
+const PurpleStroke = "#7c3aed"
+const SlateGray = "#475569"
+const DarkSlate = "#202124"
+const SubText = "#5f6368"
+
+Style @Ghost {
+  fill: transparent, strokeWidth: 0, fontColor: transparent, padding: 0
+}
+Style @ProductCard {
+  width: 202, height: 60,
+  fill: "#ffffff", strokeColor: "#dadce0", strokeWidth: 1, borderRadius: 8,
+  fontColor: $DarkSlate, subFontColor: $SubText,
+  fontSize: 13.5, subFontSize: 11, labelWeight: bold,
+  textAlign: "left", textVAlign: "middle",
+  iconPosition: "left", iconSize: 28, padding: 10, shadow: true
+}
+Style @HubCard {
+  base: @ProductCard,
+  width: 210, height: 64, strokeColor: $GcpBlue, strokeWidth: 2
+}
+Style @SecurityHubCard {
+  base: @ProductCard,
+  width: 202, height: 60, strokeColor: $GuardRed, strokeWidth: 1.8
+}
+
+Zone @GoogleCloud {
+  title: "Google Cloud"
+  subtitle: "Demo 01 — Governança de Ingress (Agent Gateway CLIENT_TO_AGENT + Model Armor + Cloud DLP)"
+  icon: "GoogleCloud", iconSize: 24
+  layout: matrix, gap: 40, padding: 24, align: "stretch"
+  fill: "#f8fafd", strokeColor: "#c2d7f5", strokeWidth: 1.5, borderRadius: 14
+  areas: [
+    "client  gateway   runtime",
+    "client  security  data_audit"
+  ]
+
+  Zone @Z1_Client {
+    area: "client"
+    title: "1. Camada Cliente"
+    subtitle: "Identidade OAuth / SA"
+    fill: "#e8f0fe", strokeColor: "#8ab4f8", borderRadius: 12
+    layout: column, gap: 44, padding: 20, align: "center"
+
+    [end_user: "Usuário / Atacante" | "Prompts em PT-BR"] {
+      style: @ProductCard, icon: "User",
+      description: "Usuário corporativo ou atacante enviando consultas ou tentativas de Jailbreak em PT-BR."
+    }
+    [client_app: "Client App / Console" | "Bearer Token (OAuth / SA)"] {
+      style: @ProductCard, icon: "DeveloperTools",
+      description: "Agent Console / cURL autenticado com OAuth (argolis) ou Service Account com roles/aiplatform.user."
+    }
+  }
+
+  Zone @Z2_Gateway {
+    area: "gateway"
+    title: "2. API Vertex AI & Ingress"
+    subtitle: "us-central1 • CLIENT_TO_AGENT"
+    fill: "#e6f4ea", strokeColor: "#81c995", borderRadius: 12
+    layout: row, gap: 58, padding: 20, align: "center", justify: "center"
+
+    [vertex_iam: "Cloud IAM (Vertex)" | "roles/aiplatform.user"] {
+      style: @ProductCard, icon: "IAM",
+      description: "Autoriza o Client App a invocar o Agent Runtime (aiplatform.reasoningEngines.query). Sem política IAP no Gateway."
+    }
+    [agw_ingress: "Agent Gateway" | "agw-modar-ingress"] {
+      style: @HubCard, icon: "Agents",
+      description: "Gateway gerenciado (CLIENT_TO_AGENT) vinculado via clientToAgentConfig: governa query e streamQuery do Agent Runtime."
+    }
+  }
+
+  Zone @Z3_Security {
+    area: "security"
+    title: "3. Guardrails de Conteúdo"
+    subtitle: "CONTENT_AUTHZ • Model Armor • Cloud DLP"
+    fill: "#fce8e6", strokeColor: "#f6aea9", borderRadius: 12
+    layout: row, gap: 64, padding: 20, align: "center", justify: "center"
+
+    Zone @SecLeftCol {
+      style: @Ghost, layout: column, gap: 56, align: "center"
+      [modar_req: "Model Armor (Req)" | "Anti-PI & Jailbreak"] {
+        style: @SecurityHubCard, icon: "ModelArmor",
+        description: "Template agw-modar-req-template: bloqueia Prompt Injection, Jailbreak e RAI na entrada (HTTP 403)."
+      }
+      [cloud_dlp: "Cloud DLP" | "Redação [US_SSN]"] {
+        style: @ProductCard, icon: "DLP",
+        description: "Templates agw-modar-ssn-inspect e ssn-redact: substitui SSNs por [US_SOCIAL_SECURITY_NUMBER]."
+      }
+    }
+
+    Zone @SecRightCol {
+      style: @Ghost, layout: column, gap: 56, align: "center"
+      [authz_ext: "Authz Policy & Ext" | "CONTENT_AUTHZ gRPC"] {
+        style: @ProductCard, icon: "NetworkSecurity",
+        description: "Política agw-modar-authz-policy + Service Extension invocando modelarmor.us-central1.rep.googleapis.com."
+      }
+      [modar_resp: "Model Armor (Resp)" | "Filtro SDP de Saída"] {
+        style: @SecurityHubCard, icon: "ModelArmor",
+        description: "Template agw-modar-resp-template: sanitiza o streaming de saída do agente antes de retornar ao cliente."
+      }
+    }
+  }
+
+  Zone @Z4_Runtime {
+    area: "runtime"
+    title: "4. Agent Runtime"
+    subtitle: "us-central1 & global"
+    fill: "#f3e8fd", strokeColor: "#c084fc", borderRadius: 12
+    layout: column, gap: 44, padding: 20, align: "center", justify: "center"
+
+    [gemini_global: "Gemini 3.8 Flash" | "Endpoint: global"] {
+      style: @ProductCard, icon: "Gemini",
+      description: "Inferência do modelo sempre roteada ao endpoint global (MODEL_LOCATION=global)."
+    }
+    [re_agent: "ADK CRM Agent" | "agw-modar-agent-crm"] {
+      style: @HubCard, icon: "AgentEngine",
+      description: "Reasoning Engine ADK (PT-BR) com ferramentas Python para consulta de clientes no Cloud Storage."
+    }
+  }
+
+  Zone @Z5_DataAudit {
+    area: "data_audit"
+    title: "5. Dados & Auditoria"
+    subtitle: "Cloud Storage & Logs"
+    fill: "#fef7e0", strokeColor: "#fde293", borderRadius: 12
+    layout: column, gap: 56, padding: 20, align: "center", justify: "center"
+
+    [gcs_crm: "Cloud Storage CRM" | "customers_*.csv"] {
+      style: @ProductCard, icon: "CloudStorage",
+      description: "Bucket cabral-governance-ai-agw-modar-data acessado via HTTPS + OAuth Token (roles/storage.objectViewer)."
+    }
+    [cloud_logging: "Cloud Logging" | "sanitize_operations"] {
+      style: @ProductCard, icon: "CloudLogging",
+      description: "Registra sanitizationVerdict (ALLOW / BLOCK) e eventos de inspeção do Model Armor."
+    }
+  }
+}
+
+[end_user] -> [client_app]: "Prompt" { sourceAnchor: "bottom", targetAnchor: "top", color: $GcpBlue, strokeWidth: 2 }
+[client_app] -> [vertex_iam]: ":streamQuery" {
+  sourceAnchor: "right", targetAnchor: "left", color: $GcpBlue, strokeWidth: 2, sequenceBadge: "1"
+}
+[vertex_iam] -> [agw_ingress]: "IAM OK" {
+  sourceAnchor: "right", targetAnchor: "left", color: $GcpGreen, strokeWidth: 2, sequenceBadge: "2"
+}
+[agw_ingress] <--> [authz_ext]: "CONTENT_AUTHZ" {
+  sourceAnchor: "bottom", targetAnchor: "top", color: $GuardRed, strokeWidth: 2, sequenceBadge: "3"
+}
+[authz_ext] <--> [modar_req]: "Prompt" {
+  sourceAnchor: "left", targetAnchor: "right", color: $GuardRed, strokeWidth: 2
+}
+[agw_ingress] <--> [re_agent]: "Autorizado" {
+  sourceAnchor: "right", targetAnchor: "left", color: $GcpBlue, strokeWidth: 2, sequenceBadge: "4"
+}
+[re_agent] <--> [gemini_global]: "LLM Global" {
+  sourceAnchor: "top", targetAnchor: "bottom", color: $PurpleStroke, strokeWidth: 2
+}
+[re_agent] <--> [gcs_crm]: "HTTPS / OAuth" {
+  sourceAnchor: "bottom", targetAnchor: "top", color: $AmberStroke, strokeWidth: 2, sequenceBadge: "5"
+}
+[authz_ext] <--> [modar_resp]: "Saída LLM" {
+  sourceAnchor: "bottom", targetAnchor: "top", color: $GuardRed, strokeWidth: 2, sequenceBadge: "6"
+}
+[modar_resp] <--> [cloud_dlp]: "DLP SSN" {
+  sourceAnchor: "left", targetAnchor: "right", color: $GuardRed, strokeWidth: 1.8
+}
+[modar_resp] -.-> [cloud_logging]: "Audit Log" {
+  sourceAnchor: "right", targetAnchor: "left", color: $SlateGray, strokeWidth: 1.8
+}
+
+animation "Ato 1: Consulta Segura (PT-BR)" {
+  step 1: [end_user] -> [client_app] { packet: "1. Clientes Oeste?" }
+  step 2: [client_app] -> [vertex_iam] { packet: "2. POST :streamQuery" }
+  step 3: [vertex_iam] -> [agw_ingress] { packet: "3. Vertex IAM OK", color: "#1e8e3e" }
+  step 4: [agw_ingress] -> [authz_ext] { packet: "4. CONTENT_AUTHZ" }
+  step 5: [authz_ext] -> [modar_req] { packet: "5. ALLOW Prompt", color: "#1e8e3e" }
+  step 6: [agw_ingress] -> [re_agent] { packet: "6. Invoca ADK" }
+  step 7: [re_agent] -> [gcs_crm] { packet: "7. Lê CSV (HTTPS)" }
+  step 8: [re_agent] -> [gemini_global] { packet: "8. Síntese PT-BR" }
+  step 9: [agw_ingress] -> [re_agent] { packet: "9. Stream Resposta", reverse: true }
+  step 10: [authz_ext] -> [modar_resp] { packet: "10. ALLOW Saída", color: "#1e8e3e" }
+  step 11: [client_app] -> [vertex_iam] { packet: "11. SSE 200 OK", reverse: true, color: "#1e8e3e" }
+}
+
+animation "Ato 2: Redação de PII / SSN (Cloud DLP)" {
+  step 1: [end_user] -> [client_app] { packet: "1. Pede SSNs" }
+  step 2: [client_app] -> [vertex_iam] { packet: "2. POST :streamQuery" }
+  step 3: [vertex_iam] -> [agw_ingress] { packet: "3. Vertex IAM OK" }
+  step 4: [agw_ingress] -> [re_agent] { packet: "4. Consulta CRM" }
+  step 5: [re_agent] -> [gcs_crm] { packet: "5. CSV com SSN claro" }
+  step 6: [agw_ingress] -> [re_agent] { packet: "6. Resposta com SSN", reverse: true, color: "#d93025" }
+  step 7: [agw_ingress] -> [authz_ext] { packet: "7. Intercepta Saída" }
+  step 8: [authz_ext] -> [modar_resp] { packet: "8. Sanitize Resp" }
+  step 9: [modar_resp] -> [cloud_dlp] { packet: "9. Redige [US_SSN]", color: "#d93025" }
+  step 10: [modar_resp] -> [cloud_logging] { packet: "10. Grava Auditoria" }
+  step 11: [client_app] -> [vertex_iam] { packet: "11. Stream Redigido", reverse: true, color: "#1e8e3e" }
+}
+
+animation "Ato 3: Bloqueio de Prompt Injection" {
+  step 1: [end_user] -> [client_app] { packet: "1. Jailbreak Attack", color: "#d93025" }
+  step 2: [client_app] -> [vertex_iam] { packet: "2. POST :streamQuery", color: "#d93025" }
+  step 3: [vertex_iam] -> [agw_ingress] { packet: "3. Chega ao Gateway" }
+  step 4: [agw_ingress] -> [authz_ext] { packet: "4. CONTENT_AUTHZ" }
+  step 5: [authz_ext] -> [modar_req] { packet: "5. VERDICT: BLOCK!", color: "#d93025" }
+  step 6: [agw_ingress] -> [authz_ext] { packet: "6. HTTP 403 Deny", reverse: true, color: "#d93025" }
+  step 7: [client_app] -> [vertex_iam] { packet: "7. Bloqueado na Borda", reverse: true, color: "#d93025" }
+}

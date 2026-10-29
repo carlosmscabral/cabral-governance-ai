@@ -17,6 +17,13 @@ O agente foi desenvolvido utilizando o **Google Agent Development Kit (ADK)** em
 
 ## 🏗️ 1. Arquitetura da Solução
 
+![Arquitetura da Solução — Demo 01](./architecture.svg)
+
+> 🎨 **Diagrama como Código (Dendrite v3.3)**: [`architecture.dendrite`](./architecture.dendrite) • [`architecture.svg`](./architecture.svg) • [`architecture.drawio`](./architecture.drawio)
+
+<details>
+<summary>📄 Ver diagrama equivalente em Mermaid (fallback texto)</summary>
+
 ```mermaid
 flowchart TD
     subgraph ClientLayer["1. Camada de Clientes & Aplicações"]
@@ -60,6 +67,8 @@ flowchart TD
     DLP -->|"13. [US_SOCIAL_SECURITY_NUMBER]"| MA_RESP
     MA_RESP -->|"14. Stream Sanitizado"| Client
 ```
+
+</details>
 
 ---
 
@@ -130,6 +139,9 @@ Para remover todos os recursos provisionados sem deixar custos residuais ou perm
 ```text
 demos/01-agw-arun-ingress-modar/
 ├── README.md                          # Este guia completo
+├── architecture.dendrite              # Diagrama executivo 16:9 Bento (Dendrite DSL + cenários animados)
+├── architecture.svg                   # Render vetorial de alta resolução (Google Cloud Icons)
+├── architecture.drawio                # Export editável para Draw.io / diagrams.net
 ├── VISUAL_GUIDE.md                    # Diagramas C4, sequence walks e wire formats
 ├── DEMO_GUIDE.md                      # Roteiro de apresentação ao vivo (4 atos) e FAQ
 ├── scenarios.json                     # Playbook interativo para o Agent Console & Wire Inspector
