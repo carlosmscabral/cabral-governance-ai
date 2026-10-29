@@ -16,7 +16,7 @@ Style @Ghost {
   fill: transparent, strokeWidth: 0, fontColor: transparent, padding: 0
 }
 Style @ProductCard {
-  width: 204, height: 60,
+  width: 214, height: 60,
   fill: "#ffffff", strokeColor: "#dadce0", strokeWidth: 1, borderRadius: 8,
   fontColor: $DarkSlate, subFontColor: $SubText,
   fontSize: 13.5, subFontSize: 11, labelWeight: bold,
@@ -25,11 +25,11 @@ Style @ProductCard {
 }
 Style @HubCard {
   base: @ProductCard,
-  width: 210, height: 64, strokeColor: $GcpBlue, strokeWidth: 2
+  width: 216, height: 64, strokeColor: $GcpBlue, strokeWidth: 2
 }
 Style @SecurityHubCard {
   base: @ProductCard,
-  width: 204, height: 60, strokeColor: $GuardRed, strokeWidth: 1.8
+  width: 214, height: 60, strokeColor: $GuardRed, strokeWidth: 1.8
 }
 
 Zone @GoogleCloud {
@@ -65,7 +65,7 @@ Zone @GoogleCloud {
     title: "2. Runtime ADK & Fronteira Egress"
     subtitle: "us-central1 • Zero-VPC • AGENT_TO_ANYWHERE"
     fill: "#f3e8fd", strokeColor: "#c084fc", borderRadius: 12
-    layout: row, gap: 64, padding: 20, align: "center", justify: "center"
+    layout: row, gap: 76, padding: 20, align: "center", justify: "center"
 
     Zone @RuntimeLeftCol {
       style: @Ghost, layout: column, gap: 46, align: "center"
@@ -90,11 +90,11 @@ Zone @GoogleCloud {
     title: "3. Governança Zero-Trust & Catálogo"
     subtitle: "REQUEST_AUTHZ • IAP CEL • Agent Registry"
     fill: "#fce8e6", strokeColor: "#f6aea9", borderRadius: 12
-    layout: row, gap: 64, padding: 20, align: "center", justify: "center"
+    layout: row, gap: 76, padding: 20, align: "center", justify: "center"
 
     Zone @PolicyLeftCol {
       style: @Ghost, layout: column, gap: 48, align: "center"
-      [iap_cel: "IAP Zanzibar ABAC" | "CEL: isReadOnly == true"] {
+      [iap_cel: "IAP + IAM Conditions" | "CEL: isReadOnly == true"] {
         style: @SecurityHubCard, icon: "IdentityAwareProxy",
         description: "Avalia roles/iap.egressor para a identidade SPIFFE com condição CEL (iap.googleapis.com/mcp.tool.isReadOnly == true || mcp.toolName == '')."
       }

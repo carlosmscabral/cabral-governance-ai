@@ -31,7 +31,7 @@ flowchart TD
     end
 
     subgraph GatewayLayer["2. Google Front End & Agent Gateway"]
-        IAP["Identity-Aware Proxy / Zanzibar PDP"]
+        IAM["Cloud IAM (Vertex AI)\nroles/aiplatform.user"]
         AGW["Agent Gateway (Ingress)\nCLIENT_TO_AGENT"]
         AuthzPolicy["Authz Policy (CONTENT_AUTHZ)\nAction: CUSTOM"]
         AuthzExt["Authz Extension (Service Extensions)\nmodelarmor.us-central1.rep.googleapis.com"]
@@ -52,8 +52,8 @@ flowchart TD
     end
 
     %% Fluxo de Ingress
-    Client -->|"1. POST streamQuery (Pergunta em PT-BR)"| IAP
-    IAP -->|"2. Encaminha para Gateway"| AGW
+    Client -->|"1. POST streamQuery (Pergunta em PT-BR)"| IAM
+    IAM -->|"2. Encaminha para Gateway"| AGW
     AGW -->|"3. Avalia Política de Conteúdo"| AuthzPolicy
     AuthzPolicy -->|"4. Invoca Extensão"| AuthzExt
     AuthzExt -->|"5. Inspeciona Prompt"| MA_REQ
