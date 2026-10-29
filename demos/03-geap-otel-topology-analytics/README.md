@@ -23,6 +23,13 @@ A solução resolve os três pontos cegos clássicos de sistemas multi-agentes c
 
 ## 🏗️ 1. Arquitetura da Solução
 
+![Arquitetura da Solução — Demo 03](./architecture.svg)
+
+> 🎨 **Diagrama como Código (Dendrite v3.3)**: [`architecture.dendrite`](./architecture.dendrite) • [`architecture.svg`](./architecture.svg) • [`architecture.drawio`](./architecture.drawio)
+
+<details>
+<summary>📄 Ver diagrama equivalente em Mermaid (fallback texto)</summary>
+
 ```mermaid
 flowchart TD
     subgraph ClientLayer["1. Operador SRE / FinOps"]
@@ -55,6 +62,8 @@ flowchart TD
     Orch -.->|"5. Upload .jsonl de prompts/respostas"| GCS
     Orch ==>|"6. Streaming gRPC Storage Write API\n(join por trace_id + span_id)"| BQ
 ```
+
+</details>
 
 ---
 

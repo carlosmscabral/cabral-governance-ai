@@ -1,0 +1,240 @@
+theme: "gcp-pro"
+renderOrder: nodes-first
+direction: right
+spacing: 28
+
+const GcpBlue = "#1a73e8"
+const GcpGreen = "#1e8e3e"
+const GuardRed = "#d93025"
+const AmberStroke = "#b45309"
+const PurpleStroke = "#7c3aed"
+const TealStroke = "#0d9488"
+const DarkSlate = "#202124"
+const SubText = "#5f6368"
+
+Style @Ghost {
+  fill: transparent, strokeWidth: 0, fontColor: transparent, padding: 0
+}
+Style @ProductCard {
+  width: 206, height: 60,
+  fill: "#ffffff", strokeColor: "#dadce0", strokeWidth: 1, borderRadius: 8,
+  fontColor: $DarkSlate, subFontColor: $SubText,
+  fontSize: 13.5, subFontSize: 11, labelWeight: bold,
+  textAlign: "left", textVAlign: "middle",
+  iconPosition: "left", iconSize: 28, padding: 10, shadow: true
+}
+Style @HubCard {
+  base: @ProductCard,
+  width: 214, height: 64, strokeColor: $GcpBlue, strokeWidth: 2
+}
+Style @AlertHubCard {
+  base: @ProductCard,
+  width: 214, height: 64, strokeColor: $GuardRed, strokeWidth: 1.8
+}
+
+Zone @GoogleCloud {
+  title: "Google Cloud"
+  subtitle: "Demo 03 — Observabilidade OTel Multi-Agente, Topologia Viva & BigQuery Analytics (Zero-VPC)"
+  icon: "GoogleCloud", iconSize: 24
+  layout: matrix, gap: 52, padding: 24, align: "stretch"
+  fill: "#f8fafd", strokeColor: "#c2d7f5", strokeWidth: 1.5, borderRadius: 14
+  areas: [
+    "client  orchestrator  analytics",
+    "client  cloudrun      observability"
+  ]
+
+  Zone @Z1_Client {
+    area: "client"
+    title: "1. Canal SRE & FinOps"
+    subtitle: "OAuth • W3C Trace Context"
+    fill: "#e8f0fe", strokeColor: "#8ab4f8", borderRadius: 12
+    layout: column, gap: 52, padding: 20, align: "center"
+
+    [sre_user: "Operador SRE" | "FinOps & Plantão (PT-BR)"] {
+      style: @ProductCard, icon: "User",
+      description: "Líder SRE/FinOps ou engenheiro de plantão investigando pedidos B2B, gargalos WMS e custos de tokens em PT-BR."
+    }
+    [agent_console: "Agent Console & CLI" | "W3C traceparent • OAuth"] {
+      style: @ProductCard, icon: "DeveloperTools",
+      description: "Injeta automaticamente o cabeçalho W3C traceparent (00-trace_id-span_id-01) e link 1-clique para o Cloud Trace."
+    }
+  }
+
+  Zone @Z2_Orchestrator {
+    area: "orchestrator"
+    title: "2. Nó 1: Agent Runtime"
+    subtitle: "us-central1 • SPIFFE & global"
+    fill: "#f3e8fd", strokeColor: "#c084fc", borderRadius: 12
+    layout: row, gap: 76, padding: 20, align: "center", justify: "center"
+
+    [vertex_iam: "Cloud IAM (Vertex)" | "roles/aiplatform.user"] {
+      style: @ProductCard, icon: "IAM",
+      description: "Autoriza :streamQuery no Reasoning Engine; o agente opera com identidade federada SPIFFE (AGENT_IDENTITY)."
+    }
+
+    Zone @OrchRightCol {
+      style: @Ghost, layout: column, gap: 52, align: "center"
+      [gemini_global: "Gemini 3.8 Flash" | "Endpoint: global"] {
+        style: @ProductCard, icon: "Gemini",
+        description: "Inferência LLM do Orquestrador e do Especialista A2A sempre no endpoint global (MODEL_LOCATION=global)."
+      }
+      [re_orchestrator: "Orquestrador ADK" | "o11y-agent-orchestrator"] {
+        style: @HubCard, icon: "AgentEngine",
+        description: "Nó 1 Reasoning Engine ADK com BigQueryAgentAnalyticsPlugin, OTLP (NO_CONTENT) e hook .jsonl (sem AI.SCORE)."
+      }
+    }
+  }
+
+  Zone @Z3_CloudRun {
+    area: "cloudrun"
+    title: "3. Malha Cloud Run"
+    subtitle: "Zero-VPC • Nós 2 & 3"
+    fill: "#fce8e6", strokeColor: "#f6aea9", borderRadius: 12
+    layout: row, gap: 76, padding: 20, align: "center", justify: "center"
+
+    [oidc_invoker: "Propagador OIDC" | "sa-o11y-cr-invoker"] {
+      style: @ProductCard, icon: "IAM",
+      description: "Impersonation keyless pelo SPIFFE do Orquestrador (roles/run.invoker) injetando W3C traceparent via HTTP e MCP _meta."
+    }
+
+    Zone @CrNodesCol {
+      style: @Ghost, layout: column, gap: 52, align: "center"
+      [cr_mcp: "FastMCP ERP (Nó 3)" | "o11y-mcp-erp-ops"] {
+        style: @AlertHubCard, icon: "CloudRun",
+        description: "Cloud Run (--functional-type=mcp-server, sa-o11y-mcp-runtime): consulta ERP e grava span StatusCode.ERROR em lock WMS (1.35s)."
+      }
+      [cr_a2a: "Agente A2A (Nó 2)" | "o11y-a2a-sla-risk"] {
+        style: @HubCard, icon: "CloudRun",
+        description: "Cloud Run (--functional-type=agent, agent-identity SPIFFE, gemini-3.8-flash @ global): calcula multas contratuais de SLA."
+      }
+    }
+  }
+
+  Zone @Z4_Analytics {
+    area: "analytics"
+    title: "4. BigQuery & Storage"
+    subtitle: "FinOps Real-Time • Sem AI.SCORE"
+    fill: "#fef7e0", strokeColor: "#fde293", borderRadius: 12
+    layout: row, gap: 84, padding: 20, align: "center", justify: "center"
+
+    Zone @AnalyticsLeftCol {
+      style: @Ghost, layout: column, gap: 52, align: "center"
+      [gcs_telemetry: "Cloud Storage" | "o11y-telemetry (.jsonl)"] {
+        style: @ProductCard, icon: "CloudStorage",
+        description: "Bucket gs://cabral-governance-ai-o11y-telemetry: offload .jsonl de prompts/completions GenAI sem inflar atributos de span."
+      }
+      [bq_analytics: "BigQuery Analytics" | "geap_o11y_demo03"] {
+        style: @HubCard, icon: "BigQuery",
+        description: "Tabela geap_o11y_demo03.agent_events alimentada via Storage Write API em sub-segundo pelo BigQueryAgentAnalyticsPlugin."
+      }
+    }
+
+    [bq_views: "Views Semânticas" | "v_llm_* • v_tool_*"] {
+      style: @ProductCard, icon: "DataAnalytics",
+      description: "Views SQL v_llm_response, v_tool_completed (tool_origin MCP vs A2A) e v_a2a_interaction (sem Online Eval AI.SCORE)."
+    }
+  }
+
+  Zone @Z5_Observability {
+    area: "observability"
+    title: "5. OTel & Topologia Viva"
+    subtitle: "Cloud Trace • Registry • App Hub"
+    fill: "#e6f4ea", strokeColor: "#81c995", borderRadius: 12
+    layout: row, gap: 92, padding: 20, align: "center", justify: "center"
+
+    [cloud_trace: "Cloud Trace (OTLP)" | "Waterfall & _AllSpans"] {
+      style: @HubCard, icon: "CloudTrace",
+      description: "Recebe spans OTLP (telemetry.googleapis.com) dos 3 runtimes sob o mesmo trace_id e expõe _AllSpans via Linked Dataset."
+    }
+    [live_topology: "Registry & App Hub" | "o11y-multiagent-app"] {
+      style: @ProductCard, icon: "AppHub",
+      description: "Agent Registry + App Hub: auto-descoberta dos 3 nós (--functional-type=agent e mcp-server) e arestas vivas SENDS_TRAFFIC."
+    }
+  }
+}
+
+[sre_user] -> [agent_console]: "Prompt" {
+  sourceAnchor: "bottom", targetAnchor: "top", color: $GcpBlue, strokeWidth: 2
+}
+[agent_console] -> [vertex_iam]: ":streamQuery" {
+  sourceAnchor: "right", targetAnchor: "left", color: $GcpBlue, strokeWidth: 2, sequenceBadge: "1"
+}
+[vertex_iam] -> [re_orchestrator]: "IAM + W3C" {
+  sourceAnchor: "right", targetAnchor: "left", color: $GcpGreen, strokeWidth: 2
+}
+[re_orchestrator] <--> [gemini_global]: "LLM Global" {
+  sourceAnchor: "top", targetAnchor: "bottom", color: $PurpleStroke, strokeWidth: 2
+}
+[re_orchestrator] <--> [oidc_invoker]: "OIDC + W3C" {
+  sourceAnchor: "bottom", targetAnchor: "top", color: $GcpBlue, strokeWidth: 2, sequenceBadge: "2"
+}
+[oidc_invoker] <--> [cr_mcp]: "MCP /mcp" {
+  sourceAnchor: "right", targetAnchor: "left", color: $GuardRed, strokeWidth: 2
+}
+[oidc_invoker] <--> [cr_a2a]: "A2A RPC" {
+  sourceAnchor: "right", targetAnchor: "left", color: $GcpBlue, strokeWidth: 2, sequenceBadge: "3"
+}
+[re_orchestrator] -.-> [gcs_telemetry]: "Hook .jsonl" {
+  sourceAnchor: "right", targetAnchor: "left", color: $AmberStroke, strokeWidth: 1.8
+}
+[re_orchestrator] -> [bq_analytics]: "Write API" {
+  sourceAnchor: "right", targetAnchor: "left", color: $AmberStroke, strokeWidth: 2, sequenceBadge: "4"
+}
+[bq_analytics] -> [bq_views]: "Views SQL" {
+  sourceAnchor: "right", targetAnchor: "left", color: $AmberStroke, strokeWidth: 2
+}
+[cr_mcp] -.-> [cloud_trace]: "Span ERROR" {
+  sourceAnchor: "right", targetAnchor: "left", color: $GuardRed, strokeWidth: 1.8
+}
+[cr_a2a] -.-> [cloud_trace]: "Spans OTLP" {
+  sourceAnchor: "right", targetAnchor: "left", color: $TealStroke, strokeWidth: 1.8
+}
+[bq_analytics] <--> [cloud_trace]: "Join Trace" {
+  sourceAnchor: "bottom", targetAnchor: "top", color: $GcpGreen, strokeWidth: 2, sequenceBadge: "5"
+}
+[cloud_trace] -> [live_topology]: "Topologia" {
+  sourceAnchor: "right", targetAnchor: "left", color: $GcpGreen, strokeWidth: 2, sequenceBadge: "6"
+}
+
+animation "Ato 1: Trace 3-Nós & Analytics (PED-9042)" {
+  step 1: [sre_user] -> [agent_console] { packet: "1. Pedido PED-9042?" }
+  step 2: [agent_console] -> [vertex_iam] { packet: "2. SSE + traceparent" }
+  step 3: [vertex_iam] -> [re_orchestrator] { packet: "3. IAM OK (TraceA)", color: "#1e8e3e" }
+  step 4: [re_orchestrator] -> [oidc_invoker] { packet: "4. OIDC + TraceA" }
+  step 5: [oidc_invoker] -> [cr_mcp] { packet: "5. MCP consultar_pedido" }
+  step 6: [cr_mcp] -> [cloud_trace] { packet: "6. Span MCP (TraceA)" }
+  step 7: [oidc_invoker] -> [cr_a2a] { packet: "7. A2A Calcula Multa" }
+  step 8: [cr_a2a] -> [cloud_trace] { packet: "8. Span A2A (TraceA)" }
+  step 9: [re_orchestrator] -> [gemini_global] { packet: "9. Síntese PT-BR" }
+  step 10: [re_orchestrator] -> [bq_analytics] { packet: "10. Eventos MCP + A2A", color: "#b45309" }
+  step 11: [re_orchestrator] -> [gcs_telemetry] { packet: "11. Offload .jsonl" }
+  step 12: [agent_console] -> [vertex_iam] { packet: "12. Resposta + Link Trace", reverse: true, color: "#1e8e3e" }
+}
+
+animation "Ato 2: Gargalo WMS ERROR & Escalonamento A2A" {
+  step 1: [sre_user] -> [agent_console] { packet: "1. Lote LOTE-LOCK-503" }
+  step 2: [agent_console] -> [vertex_iam] { packet: "2. SSE + traceparent" }
+  step 3: [vertex_iam] -> [re_orchestrator] { packet: "3. Inicia Span Raiz" }
+  step 4: [re_orchestrator] -> [oidc_invoker] { packet: "4. Propaga Contexto" }
+  step 5: [oidc_invoker] -> [cr_mcp] { packet: "5. conciliar_lote WMS" }
+  step 6: [cr_mcp] -> [cloud_trace] { packet: "6. ERROR 1.35s PG_LOCK!", color: "#d93025" }
+  step 7: [oidc_invoker] -> [cr_mcp] { packet: "7. Erro Degradado JSON", reverse: true, color: "#d93025" }
+  step 8: [oidc_invoker] -> [cr_a2a] { packet: "8. Escala Risco BioFarma", color: "#1a73e8" }
+  step 9: [cr_a2a] -> [cloud_trace] { packet: "9. Span Contingência SLA" }
+  step 10: [re_orchestrator] -> [bq_analytics] { packet: "10. Grava Latência & Erro" }
+  step 11: [agent_console] -> [vertex_iam] { packet: "11. Diagnóstico Gracioso", reverse: true, color: "#1e8e3e" }
+}
+
+animation "Ato 3: Auditoria Topologia Viva & FinOps SQL" {
+  step 1: [sre_user] -> [agent_console] { packet: "1. Triagem Fila ERP" }
+  step 2: [agent_console] -> [vertex_iam] { packet: "2. SSE + traceparent" }
+  step 3: [vertex_iam] -> [re_orchestrator] { packet: "3. Coordena Malha" }
+  step 4: [re_orchestrator] -> [oidc_invoker] { packet: "4. Lote MCP + A2A" }
+  step 5: [oidc_invoker] -> [cr_mcp] { packet: "5. Fila Crítica ERP" }
+  step 6: [oidc_invoker] -> [cr_a2a] { packet: "6. Exposição Total SLA" }
+  step 7: [cr_mcp] -> [cloud_trace] { packet: "7. Spans OTLP 3-Nós" }
+  step 8: [cloud_trace] -> [live_topology] { packet: "8. Grafo SENDS_TRAFFIC", color: "#1e8e3e" }
+  step 9: [re_orchestrator] -> [bq_analytics] { packet: "9. Stream Tokens & TTFT", color: "#b45309" }
+  step 10: [bq_analytics] -> [bq_views] { packet: "10. v_llm & v_tool_*", color: "#b45309" }
+  step 11: [bq_analytics] -> [cloud_trace] { packet: "11. SQL Join trace_id", color: "#1e8e3e" }
+}

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-07-15T12:00:00.000Z" agent="Dendrite" version="24.0.0" type="device">
+  <diagram id="Dendrite_Diagram" name="Architecture">
+    <mxGraphModel dx="1422" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3000" pageHeight="4000" math="0" shadow="1">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cell_2" value="Google Cloud" style="swimlane;fontStyle=1;horizontal=1;startSize=30;collapsible=1;rounded=1;fillColor=#f8fafd;strokeColor=#c2d7f5;strokeWidth=1.5;fontColor=#1E293B;fontSize=14;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="1550" height="734" as="geometry" />
+        </mxCell>
+        <mxCell id="cell_3" value="1. Canal SRE &amp; FinOps" style="swimlane;fontStyle=1;horizontal=1;startSize=30;collapsible=1;rounded=1;fillColor=#e8f0fe;strokeColor=#8ab4f8;fontColor=#1E293B;fontSize=14;shadow=1;" vertex="1" parent="cell_2">
+          <mxGeometry x="24" y="66" width="246" height="644" as="geometry" />
+        </mxCell>
+        <mxCell id="cell_4" value="2. Nó 1: Agent Runtime" style="swimlane;fontStyle=1;horizontal=1;startSize=30;collapsible=1;rounded=1;fillColor=#f3e8fd;strokeColor=#c084fc;fontColor=#1E293B;fontSize=14;shadow=1;" vertex="1" parent="cell_2">
+          <mxGeometry x="322" y="66" width="572" height="294" as="geometry" />
+        </mxCell>
+        <mxCell id="cell_5" value="" style="group;html=1;pointerEvents=0;fillColor=none;strokeColor=none;" vertex="1" parent="cell_4">
+          <mxGeometry x="302" y="62" width="250" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="cell_6" value="3. Malha Cloud Run" style="swimlane;fontStyle=1;horizontal=1;startSize=30;collapsible=1;rounded=1;fillColor=#fce8e6;strokeColor=#f6aea9;fontColor=#1E293B;fontSize=14;shadow=1;" vertex="1" parent="cell_2">
+          <mxGeometry x="322" y="412" width="572" height="298" as="geometry" />
+        </mxCell>
+        <mxCell id="cell_7" value="" style="group;html=1;pointerEvents=0;fillColor=none;strokeColor=none;" vertex="1" parent="cell_6">
+          <mxGeometry x="302" y="62" width="250" height="216" as="geometry" />
+        </mxCell>
+        <mxCell id="cell_8" value="4. BigQuery &amp; Storage" style="swimlane;fontStyle=1;horizontal=1;startSize=30;collapsible=1;rounded=1;fillColor=#fef7e0;strokeColor=#fde293;fontColor=#1E293B;fontSize=14;shadow=1;" vertex="1" parent="cell_2">
+          <mxGeometry x="946" y="66" width="580" height="294" as="geometry" />
+        </mxCell>
+        <mxCell id="cell_9" value="" style="group;html=1;pointerEvents=0;fillColor=none;strokeColor=none;" vertex="1" parent="cell_8">
+          <mxGeometry x="20" y="62" width="250" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="cell_10" value="5. OTel &amp; Topologia Viva" style="swimlane;fontStyle=1;horizontal=1;startSize=30;collapsible=1;rounded=1;fillColor=#e6f4ea;strokeColor=#81c995;fontColor=#1E293B;fontSize=14;shadow=1;" vertex="1" parent="cell_2">
+          <mxGeometry x="946" y="412" width="580" height="298" as="geometry" />
+        </mxCell>
+        <mxCell id="cell_11" value="&lt;b&gt;[User] Operador SRE&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#64748B&#39; size=&#39;1&#39;&gt;FinOps &amp; Plantão (PT-BR)&lt;/font&gt;" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dadce0;strokeWidth=1;fontColor=#202124;fontSize=13;shadow=1;" vertex="1" parent="cell_3">
+          <mxGeometry x="20" y="233" width="206" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cell_12" value="&lt;b&gt;[DeveloperTools] Agent Console &amp; CLI&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#64748B&#39; size=&#39;1&#39;&gt;W3C traceparent • OAuth&lt;/font&gt;" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dadce0;strokeWidth=1;fontColor=#202124;fontSize=13;shadow=1;" vertex="1" parent="cell_3">
+          <mxGeometry x="20" y="393" width="206" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cell_13" value="&lt;b&gt;[IAM] Cloud IAM (Vertex)&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#64748B&#39; size=&#39;1&#39;&gt;roles/aiplatform.user&lt;/font&gt;" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dadce0;strokeWidth=1;fontColor=#202124;fontSize=13;shadow=1;" vertex="1" parent="cell_4">
+          <mxGeometry x="20" y="138" width="206" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cell_14" value="&lt;b&gt;[Gemini] Gemini 3.8 Flash&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#64748B&#39; size=&#39;1&#39;&gt;Endpoint: global&lt;/font&gt;" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dadce0;strokeWidth=1;fontColor=#202124;fontSize=13;shadow=1;" vertex="1" parent="cell_5">
+          <mxGeometry x="22" y="18" width="206" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cell_15" value="&lt;b&gt;[AgentEngine] Orquestrador ADK&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#64748B&#39; size=&#39;1&#39;&gt;o11y-agent-orchestrator&lt;/font&gt;" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1a73e8;strokeWidth=2;fontColor=#202124;fontSize=13;shadow=1;" vertex="1" parent="cell_5">
+          <mxGeometry x="18" y="130" width="214" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="cell_16" value="&lt;b&gt;[IAM] Propagador OIDC&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#64748B&#39; size=&#39;1&#39;&gt;sa-o11y-cr-invoker&lt;/font&gt;" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dadce0;strokeWidth=1;fontColor=#202124;fontSize=13;shadow=1;" vertex="1" parent="cell_6">
+          <mxGeometry x="20" y="140" width="206" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cell_17" value="&lt;b&gt;[CloudRun] FastMCP ERP (Nó 3)&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#64748B&#39; size=&#39;1&#39;&gt;o11y-mcp-erp-ops&lt;/font&gt;" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d93025;strokeWidth=1.8;fontColor=#202124;fontSize=13;shadow=1;" vertex="1" parent="cell_7">
+          <mxGeometry x="18" y="18" width="214" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="cell_18" value="&lt;b&gt;[CloudRun] Agente A2A (Nó 2)&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#64748B&#39; size=&#39;1&#39;&gt;o11y-a2a-sla-risk&lt;/font&gt;" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1a73e8;strokeWidth=2;fontColor=#202124;fontSize=13;shadow=1;" vertex="1" parent="cell_7">
+          <mxGeometry x="18" y="134" width="214" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="cell_19" value="&lt;b&gt;[CloudStorage] Cloud Storage&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#64748B&#39; size=&#39;1&#39;&gt;o11y-telemetry (.jsonl)&lt;/font&gt;" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dadce0;strokeWidth=1;fontColor=#202124;fontSize=13;shadow=1;" vertex="1" parent="cell_9">
+          <mxGeometry x="22" y="18" width="206" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cell_20" value="&lt;b&gt;[BigQuery] BigQuery Analytics&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#64748B&#39; size=&#39;1&#39;&gt;geap_o11y_demo03&lt;/font&gt;" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1a73e8;strokeWidth=2;fontColor=#202124;fontSize=13;shadow=1;" vertex="1" parent="cell_9">
+          <mxGeometry x="18" y="130" width="214" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="cell_21" value="&lt;b&gt;[DataAnalytics] Views Semânticas&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#64748B&#39; size=&#39;1&#39;&gt;v_llm_* • v_tool_*&lt;/font&gt;" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dadce0;strokeWidth=1;fontColor=#202124;fontSize=13;shadow=1;" vertex="1" parent="cell_8">
+          <mxGeometry x="354" y="138" width="206" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cell_22" value="&lt;b&gt;[CloudTrace] Cloud Trace (OTLP)&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#64748B&#39; size=&#39;1&#39;&gt;Waterfall &amp; _AllSpans&lt;/font&gt;" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1a73e8;strokeWidth=2;fontColor=#202124;fontSize=13;shadow=1;" vertex="1" parent="cell_10">
+          <mxGeometry x="34" y="138" width="214" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="cell_23" value="&lt;b&gt;[AppHub] Registry &amp; App Hub&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#64748B&#39; size=&#39;1&#39;&gt;o11y-multiagent-app&lt;/font&gt;" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dadce0;strokeWidth=1;fontColor=#202124;fontSize=13;shadow=1;" vertex="1" parent="cell_10">
+          <mxGeometry x="340" y="140" width="206" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_24" value="Prompt" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1a73e8;strokeWidth=2;fontColor=#334155;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="cell_11" target="cell_12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_25" value=":streamQuery" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1a73e8;strokeWidth=2;fontColor=#334155;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="cell_12" target="cell_13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_26" value="IAM + W3C" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1e8e3e;strokeWidth=2;fontColor=#334155;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="cell_13" target="cell_15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_27" value="LLM Global" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7c3aed;strokeWidth=2;startArrow=block;startFill=1;fontColor=#334155;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="cell_15" target="cell_14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_28" value="OIDC + W3C" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1a73e8;strokeWidth=2;startArrow=block;startFill=1;fontColor=#334155;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="cell_15" target="cell_16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_29" value="MCP /mcp" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d93025;strokeWidth=2;startArrow=block;startFill=1;fontColor=#334155;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="cell_16" target="cell_17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_30" value="A2A RPC" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1a73e8;strokeWidth=2;startArrow=block;startFill=1;fontColor=#334155;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="cell_16" target="cell_18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_31" value="Hook .jsonl" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b45309;strokeWidth=1.8;dashed=1;fontColor=#334155;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="cell_15" target="cell_19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_32" value="Write API" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b45309;strokeWidth=2;fontColor=#334155;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="cell_15" target="cell_20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_33" value="Views SQL" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b45309;strokeWidth=2;fontColor=#334155;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="cell_20" target="cell_21">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_34" value="Span ERROR" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d93025;strokeWidth=1.8;dashed=1;fontColor=#334155;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="cell_17" target="cell_22">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_35" value="Spans OTLP" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0d9488;strokeWidth=1.8;dashed=1;fontColor=#334155;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="cell_18" target="cell_22">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_36" value="Join Trace" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1e8e3e;strokeWidth=2;startArrow=block;startFill=1;fontColor=#334155;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="cell_20" target="cell_22">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_37" value="Topologia" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1e8e3e;strokeWidth=2;fontColor=#334155;fontSize=11;endArrow=block;endFill=1;" edge="1" parent="1" source="cell_22" target="cell_23">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

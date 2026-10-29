@@ -1,0 +1,230 @@
+theme: "gcp-pro"
+renderOrder: nodes-first
+direction: right
+spacing: 28
+
+const GcpBlue = "#1a73e8"
+const GcpGreen = "#1e8e3e"
+const GuardRed = "#d93025"
+const AmberStroke = "#b45309"
+const PurpleStroke = "#7c3aed"
+const SlateGray = "#475569"
+const DarkSlate = "#202124"
+const SubText = "#5f6368"
+
+Style @Ghost {
+  fill: transparent, strokeWidth: 0, fontColor: transparent, padding: 0
+}
+Style @ProductCard {
+  width: 204, height: 60,
+  fill: "#ffffff", strokeColor: "#dadce0", strokeWidth: 1, borderRadius: 8,
+  fontColor: $DarkSlate, subFontColor: $SubText,
+  fontSize: 13.5, subFontSize: 11, labelWeight: bold,
+  textAlign: "left", textVAlign: "middle",
+  iconPosition: "left", iconSize: 28, padding: 10, shadow: true
+}
+Style @HubCard {
+  base: @ProductCard,
+  width: 210, height: 64, strokeColor: $GcpBlue, strokeWidth: 2
+}
+Style @SecurityHubCard {
+  base: @ProductCard,
+  width: 204, height: 60, strokeColor: $GuardRed, strokeWidth: 1.8
+}
+
+Zone @GoogleCloud {
+  title: "Google Cloud"
+  subtitle: "Demo 02 — Governança de Egress MCP (Agent Gateway AGENT_TO_ANYWHERE + IAP + Agent Registry)"
+  icon: "GoogleCloud", iconSize: 24
+  layout: matrix, columnGap: 76, rowGap: 40, padding: 24, align: "stretch"
+  fill: "#f8fafd", strokeColor: "#c2d7f5", strokeWidth: 1.5, borderRadius: 14
+  areas: [
+    "client  runtime_gw  backends",
+    "client  policy_reg  untrusted_audit"
+  ]
+
+  Zone @Z1_Client {
+    area: "client"
+    title: "1. Camada Operador"
+    subtitle: "Agent Console & CLI"
+    fill: "#e8f0fe", strokeColor: "#8ab4f8", borderRadius: 12
+    layout: column, gap: 48, padding: 20, align: "center", justify: "center"
+
+    [finops_user: "Analista / Red Team" | "Prompts em PT-BR"] {
+      style: @ProductCard, icon: "User",
+      description: "Operador FinOps consultando saldos de tesouraria ou atacante tentando estorno destrutivo e exfiltração em PT-BR."
+    }
+    [client_app: "Agent Console / CLI" | "OAuth Bearer Token"] {
+      style: @ProductCard, icon: "DeveloperTools",
+      description: "Agent Console & Wire Inspector ou test.sh autenticados via OAuth (argolis) invocando :streamQuery."
+    }
+  }
+
+  Zone @Z2_RuntimeEgress {
+    area: "runtime_gw"
+    title: "2. Runtime ADK & Fronteira Egress"
+    subtitle: "us-central1 • Zero-VPC • AGENT_TO_ANYWHERE"
+    fill: "#f3e8fd", strokeColor: "#c084fc", borderRadius: 12
+    layout: row, gap: 64, padding: 20, align: "center", justify: "center"
+
+    Zone @RuntimeLeftCol {
+      style: @Ghost, layout: column, gap: 46, align: "center"
+      [re_finops: "ADK FinOps Agent" | "agw-egress-agent-finops"] {
+        style: @HubCard, icon: "AgentEngine",
+        description: "Vertex AI Reasoning Engine com Agent Identity criptográfica SPIFFE (principal://agents.global.org-970548019292.system.id.goog/...)."
+      }
+      [spiffe_oidc: "SPIFFE + Ponte OIDC" | "sa-agw-egress-mcp-invoker"] {
+        style: @ProductCard, icon: "IAM",
+        description: "Identidade federada SPIFFE cunhando dinamicamente ID Tokens OIDC para sa-agw-egress-mcp-invoker (roles/run.invoker no Cloud Run)."
+      }
+    }
+
+    [agw_egress: "Agent Gateway" | "agw-egress-ata"] {
+      style: @HubCard, icon: "Agents",
+      description: "Gateway gerenciado standalone (governedAccessPath: AGENT_TO_ANYWHERE) inspecionando JSON-RPC 2.0 MCP na Camada 7 sem exigir VPC."
+    }
+  }
+
+  Zone @Z3_ZeroTrust {
+    area: "policy_reg"
+    title: "3. Governança Zero-Trust & Catálogo"
+    subtitle: "REQUEST_AUTHZ • IAP CEL • Agent Registry"
+    fill: "#fce8e6", strokeColor: "#f6aea9", borderRadius: 12
+    layout: row, gap: 64, padding: 20, align: "center", justify: "center"
+
+    Zone @PolicyLeftCol {
+      style: @Ghost, layout: column, gap: 48, align: "center"
+      [iap_cel: "IAP Zanzibar ABAC" | "CEL: isReadOnly == true"] {
+        style: @SecurityHubCard, icon: "IdentityAwareProxy",
+        description: "Avalia roles/iap.egressor para a identidade SPIFFE com condição CEL (iap.googleapis.com/mcp.tool.isReadOnly == true || mcp.toolName == '')."
+      }
+      [reg_mcp: "Registry: MCP Spec" | "erp.tesouraria.mcp"] {
+        style: @ProductCard, icon: "AgentRegistry",
+        description: "Serviço MCP agw-egress-mcp-erp registrado com TOOL_SPEC (toolspec.json) contendo anotações comportamentais aninhadas readOnlyHint."
+      }
+    }
+
+    Zone @PolicyRightCol {
+      style: @Ghost, layout: column, gap: 48, align: "center"
+      [authz_ext: "AuthzPolicy & Ext" | "REQUEST_AUTHZ (Enforced)"] {
+        style: @SecurityHubCard, icon: "NetworkSecurity",
+        description: "Network Security AuthzPolicy (agw-egress-authz-policy, failOpen: false) delegando autorização L7 para agw-egress-svc-ext-iap-enforced (iap.googleapis.com)."
+      }
+      [reg_gapi: "Registry: Core APIs" | "gapi.core.services"] {
+        style: @ProductCard, icon: "AgentRegistry",
+        description: "Catálogo agw-egress-core-gapi autorizando endpoints Google Cloud essenciais (aiplatform global, sufixos HTTP/2 :443 gRPC e iamcredentials)."
+      }
+    }
+  }
+
+  Zone @Z4_Backends {
+    area: "backends"
+    title: "4. Destinos Autorizados"
+    subtitle: "Core APIs & Cloud Run MCP"
+    fill: "#e6f4ea", strokeColor: "#81c995", borderRadius: 12
+    layout: column, gap: 46, padding: 20, align: "center", justify: "center"
+
+    [gemini_global: "Gemini 3.8 Flash" | "global + Core APIs"] {
+      style: @ProductCard, icon: "Gemini",
+      description: "Inferência global (aiplatform.googleapis.com @ global) e cunhagem OIDC (iamcredentials.googleapis.com) governadas pelo Agent Gateway."
+    }
+    [mcp_erp: "Cloud Run FastMCP" | "agw-egress-mcp-erp"] {
+      style: @HubCard, icon: "CloudRun",
+      description: "Servidor MCP Streamable HTTP stateless (--no-allow-unauthenticated): recebe chamadas readOnly (HTTP 200); chamadas destrutivas são barradas na borda (HTTP 403)."
+    }
+  }
+
+  Zone @Z5_DenyAudit {
+    area: "untrusted_audit"
+    title: "5. Anti-Exfiltração & SIEM"
+    subtitle: "Default-Deny & Auditoria"
+    fill: "#fef7e0", strokeColor: "#fde293", borderRadius: 12
+    layout: column, gap: 48, padding: 20, align: "center", justify: "center"
+
+    [ext_webhook: "Webhook Externo" | "example.com (Não Reg.)"] {
+      style: @SecurityHubCard, icon: "ShieldAlert",
+      description: "Destino arbitrário ausente no Agent Registry: tentativas de exfiltração recebem HTTP 403 Forbidden (Default-Deny) na borda de saída."
+    }
+    [cloud_logging: "Cloud Logging" | "mcpInfo & authz SIEM"] {
+      style: @ProductCard, icon: "CloudLogging",
+      description: "Auditoria L7 em networkservices.googleapis.com/Gateway registrando mcpInfo.method, mcpInfo.parameter e authzPolicyInfo.result."
+    }
+  }
+}
+
+[finops_user] -> [client_app]: "Prompt" {
+  sourceAnchor: "bottom", targetAnchor: "top", color: $GcpBlue, strokeWidth: 2
+}
+[client_app] <--> [re_finops]: ":streamQuery" {
+  sourceAnchor: "right", targetAnchor: "left", color: $GcpBlue, strokeWidth: 2, sequenceBadge: "1"
+}
+[spiffe_oidc] -> [re_finops]: "Token OIDC" {
+  sourceAnchor: "top", targetAnchor: "bottom", color: $PurpleStroke, strokeWidth: 2
+}
+[re_finops] <--> [agw_egress]: "Egress TLS" {
+  sourceAnchor: "right", targetAnchor: "left", color: $PurpleStroke, strokeWidth: 2, sequenceBadge: "2"
+}
+[agw_egress] <--> [authz_ext]: "Req. Authz" {
+  sourceAnchor: "bottom", targetAnchor: "top", color: $GuardRed, strokeWidth: 2, sequenceBadge: "3"
+}
+[authz_ext] <--> [iap_cel]: "SPIFFE + CEL" {
+  sourceAnchor: "left", targetAnchor: "right", color: $GuardRed, strokeWidth: 2, sequenceBadge: "4"
+}
+[iap_cel] <--> [reg_mcp]: "readOnlyHint" {
+  sourceAnchor: "bottom", targetAnchor: "top", color: $GuardRed, strokeWidth: 1.8
+}
+[authz_ext] <--> [reg_gapi]: "Core APIs" {
+  sourceAnchor: "bottom", targetAnchor: "top", color: $AmberStroke, strokeWidth: 1.8
+}
+[agw_egress] <--> [gemini_global]: "LLM Global" {
+  sourceAnchor: "right", targetAnchor: "left", color: $GcpBlue, strokeWidth: 2, labelRatio: 0.72
+}
+[agw_egress] <--> [mcp_erp]: "MCP 200 OK" {
+  sourceAnchor: "right", targetAnchor: "left", color: $GcpGreen, strokeWidth: 2, sequenceBadge: "5"
+}
+[authz_ext] -.-> [ext_webhook]: "403 Deny" {
+  sourceAnchor: "right", targetAnchor: "left", color: $GuardRed, strokeWidth: 2, sequenceBadge: "6"
+}
+[authz_ext] -.-> [cloud_logging]: "Audit SIEM" {
+  sourceAnchor: "right", targetAnchor: "left", color: $SlateGray, strokeWidth: 1.8, labelRatio: 0.74
+}
+
+animation "Ato 1: Tool MCP ReadOnly Autorizada" {
+  step 1: [finops_user] -> [client_app] { packet: "1. Saldos Tesouraria?" }
+  step 2: [client_app] -> [re_finops] { packet: "2. POST :streamQuery" }
+  step 3: [spiffe_oidc] -> [re_finops] { packet: "3. SPIFFE + OIDC SA" }
+  step 4: [re_finops] -> [agw_egress] { packet: "4. tools/call contas" }
+  step 5: [agw_egress] -> [authz_ext] { packet: "5. REQUEST_AUTHZ" }
+  step 6: [authz_ext] -> [iap_cel] { packet: "6. Avalia CEL MCP" }
+  step 7: [iap_cel] -> [reg_mcp] { packet: "7. isReadOnly=true OK", color: "#1e8e3e" }
+  step 8: [agw_egress] -> [mcp_erp] { packet: "8. POST /mcp (200 OK)", color: "#1e8e3e" }
+  step 9: [agw_egress] -> [mcp_erp] { packet: "9. R$ 4.850.000,00", reverse: true, color: "#1e8e3e" }
+  step 10: [agw_egress] -> [gemini_global] { packet: "10. Síntese Global" }
+  step 11: [client_app] -> [re_finops] { packet: "11. SSE 200 (PT-BR)", reverse: true, color: "#1e8e3e" }
+}
+
+animation "Ato 2: Bloqueio L7 de Tool Destrutiva (403)" {
+  step 1: [finops_user] -> [client_app] { packet: "1. Estornar BR-9010!", color: "#d93025" }
+  step 2: [client_app] -> [re_finops] { packet: "2. POST :streamQuery", color: "#d93025" }
+  step 3: [spiffe_oidc] -> [re_finops] { packet: "3. Token OIDC Válido" }
+  step 4: [re_finops] -> [agw_egress] { packet: "4. tools/call estorno", color: "#d93025" }
+  step 5: [agw_egress] -> [authz_ext] { packet: "5. REQUEST_AUTHZ" }
+  step 6: [authz_ext] -> [iap_cel] { packet: "6. Checa Regra CEL" }
+  step 7: [iap_cel] -> [reg_mcp] { packet: "7. isReadOnly=false!", color: "#d93025" }
+  step 8: [agw_egress] -> [authz_ext] { packet: "8. HTTP 403 Deny", reverse: true, color: "#d93025" }
+  step 9: [authz_ext] -> [cloud_logging] { packet: "9. Grava SIEM 403" }
+  step 10: [re_finops] -> [agw_egress] { packet: "10. Barrado na Borda!", reverse: true, color: "#d93025" }
+  step 11: [client_app] -> [re_finops] { packet: "11. Zero Pacotes MCP", reverse: true, color: "#d93025" }
+}
+
+animation "Ato 3: Anti-Exfiltração Zero-Trust (403)" {
+  step 1: [finops_user] -> [client_app] { packet: "1. Exfiltrar Saldos!", color: "#d93025" }
+  step 2: [client_app] -> [re_finops] { packet: "2. POST :streamQuery", color: "#d93025" }
+  step 3: [re_finops] -> [agw_egress] { packet: "3. POST example.com", color: "#d93025" }
+  step 4: [agw_egress] -> [authz_ext] { packet: "4. REQUEST_AUTHZ" }
+  step 5: [authz_ext] -> [iap_cel] { packet: "5. Host Não Registrado", color: "#d93025" }
+  step 6: [authz_ext] -> [ext_webhook] { packet: "6. 403 Default-Deny", color: "#d93025" }
+  step 7: [authz_ext] -> [cloud_logging] { packet: "7. Auditoria SIEM" }
+  step 8: [re_finops] -> [agw_egress] { packet: "8. Exfiltração Barrada", reverse: true, color: "#d93025" }
+  step 9: [client_app] -> [re_finops] { packet: "9. Bloqueio Zero-Trust", reverse: true, color: "#d93025" }
+}

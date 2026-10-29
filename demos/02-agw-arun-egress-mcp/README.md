@@ -22,6 +22,13 @@ As conexões HTTP/HTTPS e MCP de saída originadas pelo contêiner do agente no 
 
 ## 🏗️ 1. Arquitetura da Solução
 
+![Arquitetura da Solução — Demo 02](./architecture.svg)
+
+> 🎨 **Diagrama como Código (Dendrite v3.3)**: [`architecture.dendrite`](./architecture.dendrite) • [`architecture.svg`](./architecture.svg) • [`architecture.drawio`](./architecture.drawio)
+
+<details>
+<summary>📄 Ver diagrama equivalente em Mermaid (fallback texto)</summary>
+
 ```mermaid
 flowchart TD
     subgraph ClientLayer["1. Operador / Canais de Entrada"]
@@ -57,6 +64,8 @@ flowchart TD
     AGW -->|"6b. ALLOW 200 (isReadOnly == true)\nDENY 403 (destructiveHint == true)"| MCP
     AGW -.->|"6c. DENY 403 Default-Deny\n(Anti-Exfiltracao)"| Ext
 ```
+
+</details>
 
 ---
 
@@ -174,6 +183,9 @@ Remove Reasoning Engine, bindings SPIFFE, políticas IAP, serviços do Agent Reg
 ```text
 demos/02-agw-arun-egress-mcp/
 ├── README.md                                  # Visão geral, arquitetura, limitações e referências públicas
+├── architecture.dendrite                      # Diagrama executivo 16:9 Bento (Dendrite DSL + cenários animados)
+├── architecture.svg                           # Render vetorial de alta resolução (Google Cloud Icons)
+├── architecture.drawio                        # Export editável para Draw.io / diagrams.net
 ├── VISUAL_GUIDE.md                            # Guia visual didático (C4, sequence walks, packet walk)
 ├── DEMO_GUIDE.md                              # Roteiro executivo de demonstração ao vivo (Agent Console + CLI)
 ├── scenarios.json                             # Playbook declarativo auto-descoberto pelo Agent Console
