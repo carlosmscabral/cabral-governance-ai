@@ -67,4 +67,8 @@ gcloud beta network-security authz-policies import "${AUTHZ_POLICY_NAME}" \
     --project="${PROJECT_ID}"
 log_success "Authz Policy '${AUTHZ_POLICY_NAME}' vinculada ao Agent Gateway '${AGW_NAME}' com sucesso!"
 
+log_info "Aguardando propagação das políticas Model Armor e xDS no Agent Gateway (15s)..."
+sleep 15
+log_success "Políticas de Ingress e Model Armor ativas no Agent Gateway '${AGW_NAME}'!"
+
 log_banner "Etapa 04 Concluída com Sucesso!"
