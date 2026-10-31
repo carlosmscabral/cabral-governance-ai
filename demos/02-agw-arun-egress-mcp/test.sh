@@ -41,14 +41,19 @@ TEST_START_UTC=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 send_query() {
     local prompt="$1"
+    local max_attempts=3
+    local delay=4
+    local resp=""
+    local exit_code=0
     local token
-    token=$(gcloud auth print-access-token)
 
-    curl -s --max-time 90 -X POST "${ENDPOINT_URI}" \
-        -H "Authorization: Bearer ${token}" \
-        -H "x-goog-user-project: ${PROJECT_ID}" \
-        -H "Content-Type: application/json" \
-        -d @- <<EOF
+    for ((attempt = 1; attempt <= max_attempts; attempt++)); do
+        token=$(gcloud auth print-access-token)
+        resp=$(curl -s --max-time 120 -X POST "${ENDPOINT_URI}" \
+            -H "Authorization: Bearer ${token}" \
+            -H "x-goog-user-project: ${PROJECT_ID}" \
+            -H "Content-Type: application/json" \
+            -d @- <<EOF
 {
   "input": {
     "message": "${prompt}",
@@ -56,6 +61,21 @@ send_query() {
   }
 }
 EOF
+        ) && exit_code=0 || exit_code=$?
+
+        if [[ $exit_code -eq 0 && -n "${resp// }" ]]; then
+            echo "$resp"
+            return 0
+        fi
+
+        if ((attempt < max_attempts)); then
+            log_warn "Tentativa ${attempt}/${max_attempts} de query falhou (exit_code=${exit_code}). Retentando em ${delay}s..."
+            sleep "$delay"
+        fi
+    done
+
+    echo "$resp"
+    return "$exit_code"
 }
 
 extract_content() {
@@ -111,7 +131,7 @@ else
     ((++TESTS_FAILED))
 fi
 
-sleep 2
+sleep 4
 printf "\n"
 
 # ==============================================================================
@@ -136,7 +156,7 @@ else
     ((++TESTS_FAILED))
 fi
 
-sleep 2
+sleep 4
 printf "\n"
 
 # ==============================================================================
@@ -164,7 +184,7 @@ else
     ((++TESTS_FAILED))
 fi
 
-sleep 2
+sleep 4
 printf "\n"
 
 # ==============================================================================
