@@ -17,11 +17,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
+# Nota: NÃO herdamos PROJECT_ID/REGION/MODEL_NAME implícitos do shell pai (ex.: ~/.zshrc
+# exportando PROJECT_ID de outro repo como cabral-ca-da-caixa). Use --project se quiser override.
 USE_GLOBAL_GCLOUD=0
-ARGOLIS_ACCOUNT="${ARGOLIS_ACCOUNT:-admin@carloscabral.altostrat.com}"
-PROJECT_ID="${PROJECT_ID:-cabral-governance-ai}"
-REGION="${REGION:-us-central1}"
-MODEL_NAME="${MODEL_NAME:-gemini-3.8-flash}"
+ARGOLIS_ACCOUNT="admin@carloscabral.altostrat.com"
+PROJECT_ID="cabral-governance-ai"
+REGION="us-central1"
+MODEL_NAME="gemini-3.8-flash"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -164,12 +166,21 @@ run_services = json.loads(os.environ.get("RUN_SERVICES_JSON", "[]") or "[]")
 
 # 1. Consultar Reasoning Engines vivos na Vertex AI
 re_url = f"https://{region}-aiplatform.googleapis.com/v1beta1/projects/{project_id}/locations/{region}/reasoningEngines"
-req = urllib.request.Request(re_url, headers={"Authorization": f"Bearer {token}"})
+req = urllib.request.Request(
+    re_url,
+    headers={
+        "Authorization": f"Bearer {token}",
+        "x-goog-user-project": project_id,
+    },
+)
 reasoning_engines = []
 try:
     with urllib.request.urlopen(req, timeout=20) as resp:
         payload = json.loads(resp.read().decode("utf-8"))
         reasoning_engines = payload.get("reasoningEngines", [])
+except urllib.error.HTTPError as exc:
+    err_body = exc.read().decode("utf-8", errors="replace")[:300]
+    print(f"⚠️  Aviso: falha ao listar Reasoning Engines via API (HTTP {exc.code}: {err_body}); usando .state local se existir.")
 except Exception as exc:
     print(f"⚠️  Aviso: falha ao listar Reasoning Engines via API ({exc}); usando .state local se existir.")
 
@@ -263,13 +274,24 @@ for demo_dir in sorted(demos_dir.iterdir()):
     if not demo_dir.is_dir() or not env_sh.is_file():
         continue
 
-    # Avaliar env.sh em subshell limpo com PROJECT_ID/PROJECT_NUMBER/ORG_ID já resolvidos
+    # Avaliar env.sh em subshell limpo (sem herdar PREFIX/AGW/etc. de outro projeto no shell pai)
     cmd = (
         f"source {str(env_sh)!r} >/dev/null 2>&1 && "
         "python3 -c 'import json, os, sys; print(json.dumps({k: os.environ.get(k, \"\") for k in sys.argv[1:]}))' "
         + " ".join(demo_keys_of_interest)
     )
-    sub_env = os.environ.copy()
+    sub_env = {
+        "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
+        "HOME": os.environ.get("HOME", ""),
+        "PROJECT_ID": project_id,
+        "PROJECT_NUMBER": project_number,
+        "ORG_ID": org_id,
+        "REGION": region,
+        "MODEL_NAME": model_name,
+        "CLOUDSDK_ACTIVE_CONFIG_NAME": "argolis",
+    }
+    if gcloud_dir:
+        sub_env["CLOUDSDK_CONFIG"] = gcloud_dir
     raw = subprocess.check_output(["bash", "-c", cmd], env=sub_env, text=True).strip()
     dvars = json.loads(raw.splitlines()[-1])
 
