@@ -22,8 +22,17 @@ for arg in "$@"; do
     esac
 done
 
+if [[ -z "${CLOUDSDK_CONFIG:-}" && -d "${REPO_ROOT}/.gcp/gcloud-argolis" ]]; then
+    export CLOUDSDK_CONFIG="${REPO_ROOT}/.gcp/gcloud-argolis"
+fi
 export CLOUDSDK_ACTIVE_CONFIG_NAME="${CLOUDSDK_ACTIVE_CONFIG_NAME:-argolis}"
-export PROJECT_ID="${PROJECT_ID:-cabral-governance-ai}"
+
+CANONICAL_PROJECT_ID="cabral-governance-ai"
+if [[ -n "${PROJECT_ID:-}" && "${PROJECT_ID}" != "${CANONICAL_PROJECT_ID}" && -z "${FORCE_PROJECT_ID:-}" ]]; then
+    echo "⚠️  [AVISO] Ignorando PROJECT_ID='${PROJECT_ID}' herdado do shell; fixando '${CANONICAL_PROJECT_ID}'." >&2
+    unset PROJECT_NUMBER ORG_ID
+fi
+export PROJECT_ID="${FORCE_PROJECT_ID:-${CANONICAL_PROJECT_ID}}"
 
 echo "================================================================================" | tee -a "${SUMMARY_LOG}"
 echo "🩺 [CI HEALTHCHECK] Iniciando validação em $(TZ=America/Sao_Paulo date '+%Y-%m-%d %H:%M:%S BRT')" | tee -a "${SUMMARY_LOG}"

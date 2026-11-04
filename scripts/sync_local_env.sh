@@ -284,6 +284,7 @@ for demo_dir in sorted(demos_dir.iterdir()):
         "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
         "HOME": os.environ.get("HOME", ""),
         "PROJECT_ID": project_id,
+        "FORCE_PROJECT_ID": project_id,
         "PROJECT_NUMBER": project_number,
         "ORG_ID": org_id,
         "REGION": region,

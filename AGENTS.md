@@ -8,9 +8,10 @@ Este documento define as regras arquiteturais, convenções de código e o **con
 
 Toda demo em `demos/<NN-slug>/` deve possuir um arquivo `env.sh` que respeite os seguintes padrões:
 
-1. **Projeto GCP e Configuração `gcloud` Padrão**:
+1. **Projeto GCP e Configuração `gcloud` Padrão (Isolamento Estrito entre Workspaces)**:
+   - Se `.gcp/gcloud-argolis` existir na raiz do repositório e `CLOUDSDK_CONFIG` não estiver definido, ativar automaticamente `export CLOUDSDK_CONFIG="${REPO_ROOT}/.gcp/gcloud-argolis"`.
    - Se `CLOUDSDK_ACTIVE_CONFIG_NAME` não estiver definido e o perfil `argolis` existir na máquina local, ativar automaticamente `export CLOUDSDK_ACTIVE_CONFIG_NAME="argolis"`.
-   - O `PROJECT_ID` padrão deve ser **`cabral-governance-ai`** (`export PROJECT_ID="${PROJECT_ID:-cabral-governance-ai}"`), permitindo override via variável de ambiente.
+   - O `PROJECT_ID` canônico é **`cabral-governance-ai`**. Para impedir vazamento acidental de `PROJECT_ID` exportado em outros workspaces no terminal, nunca usar `${PROJECT_ID:-cabral-governance-ai}`; fixar `export PROJECT_ID="${FORCE_PROJECT_ID:-cabral-governance-ai}"` (emitindo aviso e limpando `PROJECT_NUMBER`/`ORG_ID` se um `PROJECT_ID` divergente do shell pai foi ignorado).
 2. **Modelo Gemini e Região de Inferência (`global`)**:
    - **Modelo padrão obrigatório**: `export MODEL_NAME="${MODEL_NAME:-gemini-3.8-flash}"`.
    - **Localização do modelo sempre `global`**: Independentemente da região de infraestrutura/computação (`REGION="${REGION:-us-central1}"`), todas as chamadas de inferência LLM devem usar o endpoint global (`MODEL_LOCATION="global"`, `GOOGLE_CLOUD_LOCATION="global"`, `VERTEX_AI_LOCATION="global"`).

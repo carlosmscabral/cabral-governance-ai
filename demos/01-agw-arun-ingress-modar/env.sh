@@ -12,6 +12,12 @@ if [[ -f "${DEMO_ROOT}/lib/common.sh" ]]; then
     source "${DEMO_ROOT}/lib/common.sh"
 fi
 
+# Auto-detect repo-local isolated gcloud config (.gcp/gcloud-argolis) if present
+REPO_ROOT="$(cd "${DEMO_ROOT}/../.." && pwd)"
+if [[ -z "${CLOUDSDK_CONFIG:-}" && -d "${REPO_ROOT}/.gcp/gcloud-argolis" ]]; then
+    export CLOUDSDK_CONFIG="${REPO_ROOT}/.gcp/gcloud-argolis"
+fi
+
 # Auto-select 'argolis' gcloud configuration if available and not explicitly overridden
 if [[ -z "${CLOUDSDK_ACTIVE_CONFIG_NAME:-}" ]]; then
     if gcloud config configurations describe argolis &>/dev/null; then
@@ -19,8 +25,13 @@ if [[ -z "${CLOUDSDK_ACTIVE_CONFIG_NAME:-}" ]]; then
     fi
 fi
 
-# Standardize Project ID (default: cabral-governance-ai)
-export PROJECT_ID="${PROJECT_ID:-cabral-governance-ai}"
+# Pin canonical Project ID (ignore stray PROJECT_ID leaked from other workspaces unless FORCE_PROJECT_ID is set)
+CANONICAL_PROJECT_ID="cabral-governance-ai"
+if [[ -n "${PROJECT_ID:-}" && "${PROJECT_ID}" != "${CANONICAL_PROJECT_ID}" && -z "${FORCE_PROJECT_ID:-}" ]]; then
+    echo "⚠️  [AVISO] Ignorando PROJECT_ID='${PROJECT_ID}' herdado do shell; fixando '${CANONICAL_PROJECT_ID}' (use FORCE_PROJECT_ID para override intencional)." >&2
+    unset PROJECT_NUMBER ORG_ID
+fi
+export PROJECT_ID="${FORCE_PROJECT_ID:-${CANONICAL_PROJECT_ID}}"
 export GOOGLE_CLOUD_PROJECT="${PROJECT_ID}"
 export CLOUDSDK_CORE_PROJECT="${PROJECT_ID}"
 if [[ -z "${PROJECT_ID:-}" ]]; then
