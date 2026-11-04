@@ -14,6 +14,11 @@ export HOST="${HOST:-127.0.0.1}"
 export PORT="${ANTIGRAVITY_SIDECAR_WEB_PORT:-${PORT:-8090}}"
 export PYTHONUNBUFFERED=1
 
+# Auto-detect repo-local isolated gcloud config (.gcp/gcloud-argolis) if present
+if [[ -z "${CLOUDSDK_CONFIG:-}" && -d "${REPO_ROOT}/.gcp/gcloud-argolis" ]]; then
+    export CLOUDSDK_CONFIG="${REPO_ROOT}/.gcp/gcloud-argolis"
+fi
+
 # Auto-detect argolis gcloud configuration if not set
 if [[ -z "${CLOUDSDK_ACTIVE_CONFIG_NAME:-}" ]]; then
     if gcloud config configurations describe argolis &>/dev/null; then

@@ -23,8 +23,10 @@ cabral-governance-ai/
 ├── AGENTS.md                   # Engineering rules, testing contract & weekly self-healing CI spec
 ├── LICENSE                     # Apache 2.0 License
 ├── README.md                   # Repository overview and demo directory
-├── .gitignore                  # Global ignore rules (credentials, state, build artifacts)
+├── .env.example                # Root environment template (Argolis + Gemini global + GEAP defaults)
+├── .gitignore                  # Global ignore rules (.env, .envrc, .gcp/, .state/, build artifacts)
 ├── scripts/
+│   ├── sync_local_env.sh       # One-command local gMac/workstation setup (.gcp/ ADC + root & demo .env)
 │   └── ci_healthcheck.sh       # Automated healthcheck, SDK upgrade & drift detector across all demos
 ├── tools/
 │   └── agent-console/          # Local Web UI & Jetski Plugin ("Chat + Lightweight Postman")
@@ -84,6 +86,19 @@ Before deploying any demo:
    gcloud config set project <YOUR_PROJECT_ID>
    ```
 3. **Required Tools**: `bash`, `jq`, `curl`, and optionally `terraform` depending on the demo.
+
+### 💻 Local Workstation / gMac Zero-Friction Setup (`.env` Sync)
+
+To configure a local workstation (e.g., gMac) with the exact same `cabral-governance-ai` defaults, Reasoning Engine IDs, and Cloud Run URLs **without touching your global corporate `~/.config/gcloud` or manually uncommenting `.env` variables**:
+
+```bash
+./scripts/sync_local_env.sh
+```
+
+What this single command does inside the repository (100% gitignored):
+1. Creates/reuses an isolated `gcloud` + ADC profile at `.gcp/gcloud-argolis/` (`admin@carloscabral.altostrat.com`, quota project `cabral-governance-ai`).
+2. Generates the root `/.env` (and `.envrc`) with shared defaults (`gemini-3.8-flash` on `global`, Reasoning Engine location `us-central1`, OTel & non-mTLS flags).
+3. Queries live Vertex AI Reasoning Engines and Cloud Run services in `cabral-governance-ai` and writes complete merged `demos/<NN-slug>/.env` + `.state/agent_info.json` files for every demo so `adk web`, `uv run`, IDEs, and `./tools/agent-console/start.sh` work immediately across all demos simultaneously.
 
 ---
 
