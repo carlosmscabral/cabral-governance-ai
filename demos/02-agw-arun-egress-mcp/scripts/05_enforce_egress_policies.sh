@@ -89,8 +89,8 @@ gcloud beta network-security authz-policies import "${AUTHZ_POLICY_NAME}" \
     --project="${PROJECT_ID}" \
     --quiet
 
-log_info "Aguardando propagação das políticas IAP e xDS no Agent Gateway (15s)..."
-sleep 15
+log_info "Aguardando propagação das políticas IAP e xDS no Agent Gateway (25s)..."
+sleep 25
 
 log_success "Modo Zero-Trust ENFORCED ativo no Agent Gateway '${AGW_NAME}'!"
 log_banner "Etapa 05 Concluída com Sucesso!"
