@@ -127,8 +127,18 @@ if ! has_internal_error "${RESP_1}" && echo "$CONTENT_1" | grep -iq "Horizonte E
     log_success "TESTE 1 PASSOU: Agente consultou o servidor MCP via Agent Gateway Egress e retornou os saldos reais!"
     ((++TESTS_PASSED))
 else
-    log_error "TESTE 1 FALHOU: Resposta não continha os dados esperados ('Horizonte Energia' e '4.850.000') ou retornou erro."
-    ((++TESTS_FAILED))
+    # Se a resposta falhar por convergência assíncrona transitória de xDS/IAP pós-deploy, retente a consulta
+    log_warn "Resposta inicial não continha os dados esperados. Aguardando convergência de IAP/xDS no Agent Gateway..."
+    sleep 5
+    RESP_1=$(send_query "${PROMPT_1}")
+    CONTENT_1=$(extract_content "${RESP_1}")
+    if ! has_internal_error "${RESP_1}" && echo "$CONTENT_1" | grep -iq "Horizonte Energia" && echo "$CONTENT_1" | grep -q "4.850.000"; then
+        log_success "TESTE 1 PASSOU (após convergência IAP): Agente consultou o servidor MCP via Agent Gateway Egress e retornou os saldos reais!"
+        ((++TESTS_PASSED))
+    else
+        log_error "TESTE 1 FALHOU: Resposta não continha os dados esperados ('Horizonte Energia' e '4.850.000') ou retornou erro."
+        ((++TESTS_FAILED))
+    fi
 fi
 
 sleep 4
